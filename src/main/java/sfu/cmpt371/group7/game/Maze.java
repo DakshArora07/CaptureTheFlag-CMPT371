@@ -2,8 +2,10 @@ package sfu.cmpt371.group7.game;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -34,6 +36,7 @@ public class Maze extends Application {
     private GridPane gridPane;
     private BorderPane root;
     private Player localPlayer;
+    private Label statusLabel;
 
     public Maze() {
         grid = new char[rows][cols];
@@ -96,6 +99,8 @@ public class Maze extends Application {
         HBox teamSelection = new HBox();
         Button redButton = new Button("Join Red Team");
         Button blueButton = new Button("Join Blue Team");
+        redButton.setStyle("-fx-font-size: 14px; -fx-background-color: #ff5555; -fx-text-fill: white;");
+        blueButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5555ff; -fx-text-fill: white;");
 
         redButton.setOnAction(e -> {
             if (localPlayer != null) { // only allow one player to join
@@ -123,8 +128,12 @@ public class Maze extends Application {
 
         teamSelection.getChildren().addAll(redButton, blueButton);
 
-        VBox sidePanel = new VBox();
-        sidePanel.getChildren().addAll(teamSelection); // Add more UI elements like score here
+        VBox sidePanel = new VBox(10);
+        sidePanel.setPadding(new Insets(10));
+        sidePanel.setStyle("-fx-background-color: #f0f0f0; -fx-border-color: gray; -fx-border-width: 1;");
+        statusLabel = new Label("Players: 0");
+        statusLabel.setStyle("-fx-font-size: 12px;");
+        sidePanel.getChildren().addAll(new Label("Team Selection"), teamSelection, statusLabel);
 
         root.setRight(sidePanel);
         root.setCenter(gridPane);
@@ -199,7 +208,7 @@ public class Maze extends Application {
     }
 
     private void connectToServer() throws IOException {
-        socket = new Socket("localhost", 1234);
+        socket = new Socket("10.0.0.106", 1234);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
