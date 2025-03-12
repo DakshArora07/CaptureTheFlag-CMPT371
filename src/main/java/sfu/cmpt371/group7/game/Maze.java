@@ -46,6 +46,7 @@ public class Maze extends Application {
             }
         }
         addBarriers();
+        addFlags();
     }
 
     public void addBarriers() {
@@ -60,6 +61,13 @@ public class Maze extends Application {
         grid[8][8] = 'X';
     }
 
+    public void addFlags(){
+        grid[0][0] = 'F';
+        grid[19][19] = 'F';
+        grid[0][19] = 'F';
+        grid[19][0] = 'F';
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
         connectToServer();
@@ -72,7 +80,10 @@ public class Maze extends Application {
                 Rectangle rect = new Rectangle(30, 30);
                 if (grid[i][j] == 'X') {
                     rect.setFill(Color.BLACK);
-                } else {
+                }
+                else if(grid[i][j] == 'F') {
+                    rect.setFill(Color.YELLOW);
+                }else {
                     rect.setFill(Color.WHITE);
                 }
                 rect.setStroke(Color.GRAY);
