@@ -44,13 +44,34 @@ public class Server {
 
                 String message;
                 while ((message = in.readLine()) != null) {
+                    String parts[] = message.split(" ");
                     if (message.startsWith("newPlayer")) {
+                        // token to add a new player
                         synchronized (players) {
                             Player player = new Player(message.split(" ")[1], Integer.parseInt(message.split(" ")[2]), Integer.parseInt(message.split(" ")[3]));
                             players.add(player);
                         }
                         broadcast(message); // send the new player message to all clients
                         System.out.println("num of players = " + players.size());
+                    }
+                    else if(message.startsWith("movePlayer")){
+                        // token to move a player
+
+                        String team = parts[1];
+                        int newX = Integer.parseInt(parts[2]);
+                        int newY = Integer.parseInt(parts[3]);
+                        synchronized (players) {
+                            Player player = players.stream()
+                                    .filter(p -> p.getTeam().equals(team))
+                                    .findFirst()
+                                    .orElse(null);
+                            if (player != null) {
+                                player.setX(newX);
+                                player.setY(newY);
+                            }
+                        }
+                        broadcast(message); // Broadcast movement to all clients
+
                     }
                 }
             } catch (Exception e) {

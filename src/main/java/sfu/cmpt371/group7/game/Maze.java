@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -32,6 +33,7 @@ public class Maze extends Application {
     private PrintWriter out;
     private GridPane gridPane;
     private BorderPane root;
+    private Player localPlayer;
 
     public Maze() {
         grid = new char[rows][cols];
@@ -96,6 +98,9 @@ public class Maze extends Application {
         Button blueButton = new Button("Join Blue Team");
 
         redButton.setOnAction(e -> {
+            if (localPlayer != null) { // only allow one player to join
+                return;
+            }
             System.out.println("total number of players " + players.size());
             int x = new Random().nextInt(20);
             int y = new Random().nextInt(20);
@@ -105,6 +110,9 @@ public class Maze extends Application {
         });
 
         blueButton.setOnAction(e -> {
+            if (localPlayer != null) { // only allow one player to join
+                return;
+            }
             System.out.println("total number of players " + players.size());
             int x = new Random().nextInt(20);
             int y = new Random().nextInt(20);
@@ -127,6 +135,65 @@ public class Maze extends Application {
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.show();
+
+        scene.setOnKeyPressed(event ->{
+            if(localPlayer != null) {
+                int newX = localPlayer.getX();
+                int newY = localPlayer.getY();
+                boolean hasMoved = false;
+
+                System.out.println("Key pressed: " + event.getCode());
+
+
+                if (event.getCode() == KeyCode.W) {
+                    hasMoved = true;
+                    newX--;
+                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                } else if (event.getCode() == KeyCode.S) {
+                    hasMoved = true;
+                    newX++;
+                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                } else if (event.getCode() == KeyCode.A) {
+                    hasMoved = true;
+                    newY--;
+                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                } else if (event.getCode() == KeyCode.D) {
+                    hasMoved = true;
+                    newY++;
+                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                }
+
+                if (hasMoved) {
+                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                }
+            }
+        });
+
+    }
+
+    private void movePlayer(Player player, int newX, int newY) {
+        // Check if move is valid (not into barrier)
+        if (newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X') {
+            Platform.runLater(() -> {
+                // Remove old player position
+                gridPane.getChildren().removeIf(node ->
+                        GridPane.getColumnIndex(node) == player.getY() &&
+                                GridPane.getRowIndex(node) == player.getX() &&
+                                node instanceof Rectangle && ((Rectangle) node).getFill() != Color.WHITE &&
+                                ((Rectangle) node).getFill() != Color.BLACK &&
+                                ((Rectangle) node).getFill() != Color.YELLOW);
+
+                // Update player position
+                player.setX(newX);
+                player.setY(newY);
+
+                // Add new player position
+                Rectangle rect = new Rectangle(30, 30);
+                rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
+                rect.setStroke(Color.GRAY);
+                gridPane.add(rect, newY, newX);
+            });
+        }
     }
 
     private void connectToServer() throws IOException {
@@ -147,6 +214,23 @@ public class Maze extends Application {
                         int y = Integer.parseInt(parts[3]);
                         Platform.runLater(() -> addPlayerToUI(team, x, y));
                     }
+                    else if(parts[0].equals("movePlayer")){
+                        String team = parts[1];
+                        int newX = Integer.parseInt(parts[2]);
+                        int newY = Integer.parseInt(parts[3]);
+                        Platform.runLater(() -> { // ensures that the movePlayer call is executed safely on the JavaFX thread
+                            Player player = players.stream()
+                                    .filter(p -> p.getTeam().equals(team) &&
+                                            (localPlayer == null || !p.equals(localPlayer)))
+                                    .findFirst()
+                                    .orElse(null);
+                            if (player != null) {
+                                movePlayer(player, newX, newY);
+                            } else if (localPlayer != null && localPlayer.getTeam().equals(team)) {
+                                movePlayer(localPlayer, newX, newY);
+                            }
+                        });
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -157,6 +241,9 @@ public class Maze extends Application {
     private void addPlayerToUI(String team, int x, int y) {
         Player player = new Player(team, x, y);
         players.add(player);
+        if(localPlayer == null){
+            localPlayer = player;
+        }
 
         Rectangle rect = new Rectangle(30, 30);
         if (team.equals("red")) {
