@@ -164,6 +164,8 @@ public class Maze extends Application {
                 }
 
                 if (hasMoved) {
+                    localPlayer.setX(newX);
+                    localPlayer.setY(newY);
                     out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
                 }
             }
