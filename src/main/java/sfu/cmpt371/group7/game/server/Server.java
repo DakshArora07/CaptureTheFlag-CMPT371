@@ -73,6 +73,10 @@ public class Server {
                         broadcast(message); // Broadcast movement to all clients
 
                     }
+
+                    else if(message.startsWith("teamSelection")){
+                        System.out.println("in team selection");
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

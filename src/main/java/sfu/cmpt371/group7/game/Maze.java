@@ -75,6 +75,7 @@ public class Maze extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        System.out.println("Starting JavaFX application...");
         connectToServer();
         listenForServerMessages();
         gridPane = new GridPane();
@@ -208,7 +209,7 @@ public class Maze extends Application {
     }
 
     private void connectToServer() throws IOException {
-        socket = new Socket("10.0.0.106", 1234);
+        socket = new Socket("192.75.242.178", 1234);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
@@ -267,6 +268,7 @@ public class Maze extends Application {
     }
 
     public static void main(String[] args) {
+        System.out.println("Starting Maze...");
         launch();
     }
 }
