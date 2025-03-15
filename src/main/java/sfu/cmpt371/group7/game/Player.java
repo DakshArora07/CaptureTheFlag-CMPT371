@@ -5,11 +5,14 @@ public class Player {
     private String team;
     private int x;
     private int y;
+    //private String name;
+
 
     public Player(String team, int x, int y){
         this.team = team;
         this.x = x;
         this.y = y;
+        //this.name = name;
     }
 
     public void setTeam(String team){
@@ -23,6 +26,10 @@ public class Player {
     public void setY(int y){
         this.y = y;
     }
+//
+//    public void setName(String name){
+//        this.name = name;
+//    }
 
     public String getTeam(){
         return team;
@@ -35,4 +42,10 @@ public class Player {
     public int getY(){
         return y;
     }
+
+//    public String getName(){
+//        return name;
+//    }
+
+
 }

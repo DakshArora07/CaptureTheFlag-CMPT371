@@ -15,6 +15,7 @@ public class Server {
     private static List<Player> players = new ArrayList<>();
     private static List<PrintWriter> clientWriters = new ArrayList<>();
     private static int clientCount = 0;
+    private final static int MIN_PLAYERS = 3;
 
     public static void main(String[] args) {
         System.out.println("Server started...");
@@ -79,6 +80,7 @@ public class Server {
                         clientCount++;
                         broadcast("updateCount " + clientCount);
                         System.out.println("in team selection");
+                        startGame();
                     }
                 }
             } catch (Exception e) {
@@ -95,6 +97,19 @@ public class Server {
                     e.printStackTrace();
                 }
             }
+        }
+
+        private void startGame(){
+            // if there are atleast MIN_PLAYERS start the game
+            // send a message to all clients to start the game
+
+            if(clientCount >= MIN_PLAYERS){
+                broadcast("startGame");
+            }
+            else{
+                System.out.println("Not enough players to start the game");
+            }
+
         }
 
         private void broadcast(String message) {
