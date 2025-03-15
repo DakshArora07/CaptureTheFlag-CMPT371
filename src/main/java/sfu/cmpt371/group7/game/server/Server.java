@@ -14,6 +14,7 @@ public class Server {
     private static final int PORT = 1234;
     private static List<Player> players = new ArrayList<>();
     private static List<PrintWriter> clientWriters = new ArrayList<>();
+    private static int clientCount = 0;
 
     public static void main(String[] args) {
         System.out.println("Server started...");
@@ -75,6 +76,8 @@ public class Server {
                     }
 
                     else if(message.startsWith("teamSelection")){
+                        clientCount++;
+                        broadcast("updateCount " + clientCount);
                         System.out.println("in team selection");
                     }
                 }

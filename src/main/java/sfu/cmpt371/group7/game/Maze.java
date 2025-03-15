@@ -209,7 +209,7 @@ public class Maze extends Application {
     }
 
     private void connectToServer() throws IOException {
-        socket = new Socket("192.75.242.178", 1234);
+        socket = new Socket("localhost", 1234);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
