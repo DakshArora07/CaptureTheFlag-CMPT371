@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -30,6 +29,9 @@ public class Console extends Application {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+
+    // each console will have a player and the player will be passed onto the maze class to basically put the player in the maze.
+     Player player = new Player();
 
     public static void main(String[] args) {
         launch(args);
@@ -54,6 +56,8 @@ public class Console extends Application {
             String playerName = nameField.getText().trim();
             if(!playerName.isEmpty()){
                 sendToServer("teamSelection red " +  playerName);
+                player.setName(playerName);
+                player.setTeam("red");
             }
             else {
                 System.out.println("name empty");
@@ -66,9 +70,11 @@ public class Console extends Application {
             String playerName = nameField.getText().trim();
             if(!playerName.isEmpty()){
                 sendToServer("teamSelection blue " + playerName);
+                player.setName(playerName);
+                player.setTeam("blue");
             }
-            else {
-                System.out.println("name empty");
+            else{
+            System.out.println("name empty");
             }
         });
 
@@ -120,13 +126,17 @@ public class Console extends Application {
                         Platform.runLater(() -> countLabel.setText("Total count: " + totalCount));
                     }
                     else if(message.startsWith("startGame")){
+                        // team, x , y, name
+                        // x and y will be overridden in the maze class.
+
                         // start the game
                         // add a function to start the game and basically start the maze class
                         Platform.runLater(() -> {
                             System.out.println("Starting the game...");
                             try {
                                 Stage mazeStage = new Stage();
-                                new Maze().start(mazeStage);
+                                new Maze(player).start(mazeStage);
+
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

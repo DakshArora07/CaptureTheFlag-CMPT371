@@ -7,12 +7,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.BufferedReader;
@@ -38,7 +36,8 @@ public class Maze extends Application {
     private Player localPlayer;
     private Label statusLabel;
 
-    public Maze() {
+    public Maze(Player player) {
+        localPlayer = player;
         grid = new char[rows][cols];
         players = new ArrayList<>();
         initGrid();
@@ -103,29 +102,29 @@ public class Maze extends Application {
         redButton.setStyle("-fx-font-size: 14px; -fx-background-color: #ff5555; -fx-text-fill: white;");
         blueButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5555ff; -fx-text-fill: white;");
 
-        redButton.setOnAction(e -> {
-            if (localPlayer != null) { // only allow one player to join
-                return;
-            }
-            System.out.println("total number of players " + players.size());
-            int x = new Random().nextInt(20);
-            int y = new Random().nextInt(20);
-            out.println("newPlayer red " + x + " " + y); // used to get the loscation of the player
-            addPlayerToUI("red", x, y);
-            root.setBottom(null);
-        });
+//        redButton.setOnAction(e -> {
+//            if (localPlayer != null) { // only allow one player to join
+//                return;
+//            }
+//            System.out.println("total number of players " + players.size());
+//            int x = new Random().nextInt(20);
+//            int y = new Random().nextInt(20);
+//            out.println("newPlayer red " + x + " " + y); // used to get the loscation of the player
+//            addPlayerToUI("red", x, y);
+//            root.setBottom(null);
+//        });
 
-        blueButton.setOnAction(e -> {
-            if (localPlayer != null) { // only allow one player to join
-                return;
-            }
-            System.out.println("total number of players " + players.size());
-            int x = new Random().nextInt(20);
-            int y = new Random().nextInt(20);
-            out.println("newPlayer blue " + x + " " + y );
-            addPlayerToUI("blue", x, y);
-            root.setBottom(null);
-        });
+//        blueButton.setOnAction(e -> {
+//            if (localPlayer != null) { // only allow one player to join
+//                return;
+//            }
+//            System.out.println("total number of players " + players.size());
+//            int x = new Random().nextInt(20);
+//            int y = new Random().nextInt(20);
+//            out.println("newPlayer blue " + x + " " + y );
+//            addPlayerToUI("blue", x, y);
+//            root.setBottom(null);
+//        });
 
         teamSelection.getChildren().addAll(redButton, blueButton);
 
@@ -214,35 +213,46 @@ public class Maze extends Application {
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
+    private void addPlayer() {
+        String team = localPlayer.getTeam();
+        int x = team.equals("red") ? new Random().nextInt(rows) : new Random().nextInt(rows);
+        int y = team.equals("red") ? new Random().nextInt(cols / 2) : (cols / 2) + new Random().nextInt(cols / 2);
+
+        Platform.runLater(() -> addPlayerToUI(localPlayer.getName(), team, x, y));
+
+
+    }
+
     private void listenForServerMessages() {
         new Thread(() -> {
             try {
                 String message;
                 while ((message = in.readLine()) != null) {
                     String[] parts = message.split(" ");
-                    if (parts[0].equals("newPlayer")) {
-                        String team = parts[1];
-                        int x = Integer.parseInt(parts[2]);
-                        int y = Integer.parseInt(parts[3]);
-                        Platform.runLater(() -> addPlayerToUI(team, x, y));
-                    }
-                    else if(parts[0].equals("movePlayer")){
-                        String team = parts[1];
-                        int newX = Integer.parseInt(parts[2]);
-                        int newY = Integer.parseInt(parts[3]);
-                        Platform.runLater(() -> { // ensures that the movePlayer call is executed safely on the JavaFX thread
-                            Player player = players.stream()
-                                    .filter(p -> p.getTeam().equals(team) &&
-                                            (localPlayer == null || !p.equals(localPlayer)))
-                                    .findFirst()
-                                    .orElse(null);
-                            if (player != null) {
-                                movePlayer(player, newX, newY);
-                            } else if (localPlayer != null && localPlayer.getTeam().equals(team)) {
-                                movePlayer(localPlayer, newX, newY);
-                            }
-                        });
-                    }
+                     if(parts[0].equals("movePlayer")) {
+                         String team = parts[1];
+                         int newX = Integer.parseInt(parts[2]);
+                         int newY = Integer.parseInt(parts[3]);
+                         Platform.runLater(() -> { // ensures that the movePlayer call is executed safely on the JavaFX thread
+                             Player player = players.stream()
+                                     .filter(p -> p.getTeam().equals(team) &&
+                                             (localPlayer == null || !p.equals(localPlayer)))
+                                     .findFirst()
+                                     .orElse(null);
+                             if (player != null) {
+                                 movePlayer(player, newX, newY);
+                             } else if (localPlayer != null && localPlayer.getTeam().equals(team)) {
+                                 movePlayer(localPlayer, newX, newY);
+                             }
+                         });
+                     }
+                     else if(parts[0].equals("newPlayer")){
+                            String team = parts[1];
+                            int x = Integer.parseInt(parts[2]);
+                            int y = Integer.parseInt(parts[3]);
+                            String name = parts[4];
+                            Platform.runLater(() -> addPlayerToUI(name, team, x, y));
+                        }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -250,21 +260,23 @@ public class Maze extends Application {
         }).start();
     }
 
-    private void addPlayerToUI(String team, int x, int y) {
-        Player player = new Player(team, x, y);
+    private void addPlayerToUI(String playerName, String team, int x, int y) {
+        Player player = new Player(team , x, y, playerName);
         players.add(player);
-        if(localPlayer == null){
+        if (localPlayer == null) {
             localPlayer = player;
         }
 
+        // Create a rectangle and text to display name
         Rectangle rect = new Rectangle(30, 30);
-        if (team.equals("red")) {
-            rect.setFill(Color.RED);
-        } else {
-            rect.setFill(Color.BLUE);
-        }
+        rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
         rect.setStroke(Color.GRAY);
-        gridPane.add(rect, y, x);
+
+        Text textNode = new Text(playerName);
+        textNode.setFill(Color.BLACK);
+        // Stack them together
+        StackPane pane = new StackPane(rect, textNode);
+        gridPane.add(pane, y, x);
     }
 
     public static void main(String[] args) {

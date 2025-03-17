@@ -1,123 +1,146 @@
 package sfu.cmpt371.group7.game.server;
 
+import sfu.cmpt371.group7.game.Player;
+
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
-import sfu.cmpt371.group7.game.Player;
+import java.util.Random;
 
 public class Server {
     private static final int PORT = 1234;
-    private static List<Player> players = new ArrayList<>();
-    private static List<PrintWriter> clientWriters = new ArrayList<>();
-    private static int clientCount = 0;
-    private final static int MIN_PLAYERS = 3;
+    private static final int MIN_PLAYERS = 2; // Minimum players needed to start a game
+    private List<ClientHandler> clients = new ArrayList<>();
+    private int clientCount = 0;
+    private boolean gameStarted = false;
+    private final Random random = new Random();
+    private final List<Player> PLAYERS = new ArrayList<>();
 
-    public static void main(String[] args) {
-        System.out.println("Server started...");
+    public Server() {
+        System.out.println("Server starting on port " + PORT);
+    }
+
+    public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
-                new ClientHandler(serverSocket.accept()).start();
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
+
+                ClientHandler client = new ClientHandler(clientSocket);
+                clients.add(client);
+                new Thread(client).start();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Server error: " + e.getMessage());
         }
     }
 
-    private static class ClientHandler extends Thread {
+    private void broadcast(String message) {
+        System.out.println("Broadcasting: " + message);
+        for (ClientHandler client : clients) {
+            client.sendMessage(message);
+        }
+    }
+
+    private void checkGameStart() {
+        if (!gameStarted && clientCount >= MIN_PLAYERS) {
+            // convey to all the players to add all the players to the maze
+            System.out.println("Starting game with " + clientCount + " players");
+            gameStarted = true;
+            broadcast("startGame");
+            //System.out.println("uerakaaaaaaaaaaaaaa");
+
+            for(int i=0; i<PLAYERS.size(); i++){
+                broadcast("newPlayer " + PLAYERS.get(i).getTeam() + " " + PLAYERS.get(i).getX() + " " + PLAYERS.get(i).getY() + " " + PLAYERS.get(i).getName());
+            }
+        }
+    }
+
+    private class ClientHandler implements Runnable {
         private Socket socket;
         private PrintWriter out;
+        private BufferedReader in;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
+            try {
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            } catch (IOException e) {
+                System.err.println("Error setting up client handler: " + e.getMessage());
+            }
         }
 
+        public void sendMessage(String message) {
+            out.println(message);
+        }
+
+        @Override
         public void run() {
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
-                synchronized (clientWriters) {
-                    clientWriters.add(out);
-                }
-
                 String message;
                 while ((message = in.readLine()) != null) {
-                    String parts[] = message.split(" ");
-                    if (message.startsWith("newPlayer")) {
-                        // token to add a new player
-                        synchronized (players) {
-                            Player player = new Player(message.split(" ")[1], Integer.parseInt(message.split(" ")[2]), Integer.parseInt(message.split(" ")[3]));
-                            players.add(player);
-                        }
-                        broadcast(message); // send the new player message to all clients
-                        System.out.println("num of players = " + players.size());
-                    }
-                    else if(message.startsWith("movePlayer")){
-                        // token to move a player
+                    System.out.println("Received: " + message);
+                    String[] parts = message.split(" ");
 
+                    if (message.startsWith("teamSelection")) {
+                        // Format: teamSelection <team> <playerName>
                         String team = parts[1];
-                        int newX = Integer.parseInt(parts[2]);
-                        int newY = Integer.parseInt(parts[3]);
-                        synchronized (players) {
-                            Player player = players.stream()
-                                    .filter(p -> p.getTeam().equals(team))
-                                    .findFirst()
-                                    .orElse(null);
-                            if (player != null) {
-                                player.setX(newX);
-                                player.setY(newY);
-                            }
+                        String playerName = parts[2];
+
+                        // Determine spawn position based on team
+                        int x, y;
+                        if (team.equals("red")) {
+                            // Red team spawns on the left side
+                            x = random.nextInt(5) + 1;
+                            y = random.nextInt(10) + 1;
+                        } else {
+                            // Blue team spawns on the right side
+                            x = random.nextInt(5) + 14;
+                            y = random.nextInt(10) + 1;
                         }
-                        broadcast(message); // Broadcast movement to all clients
 
-                    }
-
-                    else if(message.startsWith("teamSelection")){
+                        // Increment client count
                         clientCount++;
+
+                        // Create a new player object
+                        Player player = new Player(team, x, y, playerName);
+                        PLAYERS.add(player);
+
+                        // Notify all clients of new count
                         broadcast("updateCount " + clientCount);
-                        System.out.println("in team selection");
-                        startGame();
+
+                        // Check if we should start the game
+                        checkGameStart();
+                    }
+                    else if (message.startsWith("movePlayer")) {
+                        // Format: movePlayer <team> <x> <y>
+                        // Just broadcast this to all clients
+                        broadcast(message);
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+                System.err.println("Error in client handler: " + e.getMessage());
             } finally {
-                if (out != null) {
-                    synchronized (clientWriters) {
-                        clientWriters.remove(out);
-                    }
-                }
                 try {
+                    clients.remove(this);
                     socket.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    clientCount--;
+                    broadcast("updateCount " + clientCount);
+                } catch (IOException e) {
+                    System.err.println("Error closing client socket: " + e.getMessage());
                 }
             }
         }
+    }
 
-        private void startGame(){
-            // if there are atleast MIN_PLAYERS start the game
-            // send a message to all clients to start the game
-
-            if(clientCount >= MIN_PLAYERS){
-                broadcast("startGame");
-            }
-            else{
-                System.out.println("Not enough players to start the game");
-            }
-
-        }
-
-        private void broadcast(String message) {
-            synchronized (clientWriters) {
-                for (PrintWriter writer : clientWriters) {
-                    writer.println(message);
-                }
-            }
-        }
+    public static void main(String[] args) {
+        Server server = new Server();
+        server.start();
     }
 }
