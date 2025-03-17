@@ -1,6 +1,7 @@
 module sfu.cmpt371.group7.game {
     requires javafx.controls;
     requires javafx.fxml;
+    requires dotenv.java;
 
 
     opens sfu.cmpt371.group7.game to javafx.fxml;

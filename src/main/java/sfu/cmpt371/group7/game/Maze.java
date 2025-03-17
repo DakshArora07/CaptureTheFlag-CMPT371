@@ -1,5 +1,6 @@
 package sfu.cmpt371.group7.game;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -24,6 +25,14 @@ import java.util.Random;
 
 public class Maze extends Application {
 
+    private static final Dotenv dotenv = Dotenv.configure()
+            .directory("./")
+            .filename("var.env")
+            .load();
+
+    private static final String ADDRESS = dotenv.get("ADDRESS");
+    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+
     private final int rows = 20;
     private final int cols = 20;
     private final char[][] grid;
@@ -35,6 +44,7 @@ public class Maze extends Application {
     private BorderPane root;
     private Player localPlayer;
     private Label statusLabel;
+    private Label name;
 
     public Maze(Player player) {
         localPlayer = player;
@@ -76,6 +86,7 @@ public class Maze extends Application {
     public void start(Stage stage) throws IOException {
         System.out.println("Starting JavaFX application...");
         connectToServer();
+        getNumberOfPlayers();
         listenForServerMessages();
         gridPane = new GridPane();
         root = new BorderPane();
@@ -96,44 +107,25 @@ public class Maze extends Application {
             }
         }
 
-        HBox teamSelection = new HBox();
-        Button redButton = new Button("Join Red Team");
-        Button blueButton = new Button("Join Blue Team");
-        redButton.setStyle("-fx-font-size: 14px; -fx-background-color: #ff5555; -fx-text-fill: white;");
-        blueButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5555ff; -fx-text-fill: white;");
+        Button exitButton = new Button("Exit");
+        exitButton.setStyle("-fx-background-color: #ff0000; -fx-text-fill: white;");
+        exitButton.setOnAction(e -> {
+            // exit the game and reduce the count and also remove the player from the all the other persons game.
+            // need to use a token to remove the player.
+            // server can send message to all the clients to remove the player.
+            // a corresponding fxn will be executed in the maze class
+            out.println("exitGame " + localPlayer.getName());
+            System.exit(0);
+        });
 
-//        redButton.setOnAction(e -> {
-//            if (localPlayer != null) { // only allow one player to join
-//                return;
-//            }
-//            System.out.println("total number of players " + players.size());
-//            int x = new Random().nextInt(20);
-//            int y = new Random().nextInt(20);
-//            out.println("newPlayer red " + x + " " + y); // used to get the loscation of the player
-//            addPlayerToUI("red", x, y);
-//            root.setBottom(null);
-//        });
-
-//        blueButton.setOnAction(e -> {
-//            if (localPlayer != null) { // only allow one player to join
-//                return;
-//            }
-//            System.out.println("total number of players " + players.size());
-//            int x = new Random().nextInt(20);
-//            int y = new Random().nextInt(20);
-//            out.println("newPlayer blue " + x + " " + y );
-//            addPlayerToUI("blue", x, y);
-//            root.setBottom(null);
-//        });
-
-        teamSelection.getChildren().addAll(redButton, blueButton);
 
         VBox sidePanel = new VBox(10);
         sidePanel.setPadding(new Insets(10));
         sidePanel.setStyle("-fx-background-color: #f0f0f0; -fx-border-color: gray; -fx-border-width: 1;");
         statusLabel = new Label("Players: 0");
+        name = new Label("Name: " + localPlayer.getName());
         statusLabel.setStyle("-fx-font-size: 12px;");
-        sidePanel.getChildren().addAll(new Label("Team Selection"), teamSelection, statusLabel);
+        sidePanel.getChildren().addAll(statusLabel, name);
 
         root.setRight(sidePanel);
         root.setCenter(gridPane);
@@ -155,21 +147,41 @@ public class Maze extends Application {
 
 
                 if (event.getCode() == KeyCode.W) {
-                    hasMoved = true;
-                    newX--;
-                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    if(checkValidMove(newX - 1, newY)) {
+                        hasMoved = true;
+                        newX--;
+                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    }
+                    else{
+                        System.err.println("Invalid move");
+                    }
                 } else if (event.getCode() == KeyCode.S) {
-                    hasMoved = true;
-                    newX++;
-                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    if(checkValidMove(newX + 1, newY)) {
+                        hasMoved = true;
+                        newX++;
+                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    }
+                    else{
+                        System.err.println("Invalid move");
+                    }
                 } else if (event.getCode() == KeyCode.A) {
-                    hasMoved = true;
-                    newY--;
-                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    if(checkValidMove(newX, newY - 1)) {
+                        hasMoved = true;
+                        newY--;
+                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    }
+                    else{
+                        System.err.println("Invalid move");
+                    }
                 } else if (event.getCode() == KeyCode.D) {
-                    hasMoved = true;
-                    newY++;
-                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    if(checkValidMove(newX, newY + 1)) {
+                        hasMoved = true;
+                        newY++;
+                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    }
+                    else{
+                        System.err.println("Invalid move");
+                    }
                 }
 
                 if (hasMoved) {
@@ -181,6 +193,12 @@ public class Maze extends Application {
         });
 
     }
+
+    private boolean checkValidMove(int newX, int newY) {
+        return newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X' && grid[newX][newY] != 'F' && !players.stream().anyMatch(p -> p.getX() == newX && p.getY() == newY);
+    }
+
+    // need to fix this part to make sure the movement is correct
 
     private void movePlayer(Player player, int newX, int newY) {
         // Check if move is valid (not into barrier)
@@ -213,7 +231,7 @@ public class Maze extends Application {
     }
 
     private void connectToServer() throws IOException {
-        socket = new Socket("localhost", 1234);
+        socket = new Socket(ADDRESS, PORT);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
@@ -258,6 +276,11 @@ public class Maze extends Application {
                             String name = parts[4];
                             Platform.runLater(() -> addPlayerToUI(name, team, x, y));
                         }
+
+                     else if(parts[0].equals("sizeOfPlayersIs")){
+                         int playerCount = Integer.parseInt(parts[1]);
+                            Platform.runLater(() -> statusLabel.setText("Players: " + playerCount));
+                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -282,6 +305,10 @@ public class Maze extends Application {
         // Stack them together
         StackPane pane = new StackPane(rect, textNode);
         gridPane.add(pane, y, x);
+    }
+
+    private void getNumberOfPlayers() {
+        out.println("tellMeTheCurrentPlayers");
     }
 
     public static void main(String[] args) {

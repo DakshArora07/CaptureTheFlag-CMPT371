@@ -1,5 +1,6 @@
 package sfu.cmpt371.group7.game.server;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import sfu.cmpt371.group7.game.Player;
 
 import java.io.BufferedReader;
@@ -13,8 +14,17 @@ import java.util.List;
 import java.util.Random;
 
 public class Server {
-    private static final int PORT = 1234;
-    private static final int MIN_PLAYERS = 2; // Minimum players needed to start a game
+    private static final Dotenv dotenv = Dotenv.configure()
+            .directory("./")
+            .filename("var.env")
+            .load();
+
+    private static final int PORT_NUMBER = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+    private static final int MIN_PLAYERS_REQUIRED = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
+
+
+    private static final int PORT = PORT_NUMBER;
+    private static final int MIN_PLAYERS = MIN_PLAYERS_REQUIRED; // Minimum players needed to start a game
     private List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
@@ -122,6 +132,27 @@ public class Server {
                         // Format: movePlayer <team> <x> <y>
                         // Just broadcast this to all clients
                         broadcast(message);
+                    }
+                    else if(message.startsWith("tellMeTheCurrentPlayers")){
+                        // tell the maze that there are PLAYERS.size() players in the session
+                        broadcast("sizeOfPlayersIs " + String.valueOf(PLAYERS.size()));
+                    }
+                    else if(message.startsWith("exitGame")){
+                        // exit the game, the second arg is the player name.
+                        // remove the player from the PLAYERS list
+                        // decrement the client count
+                        // broadcast the new count
+
+                        String playerName = parts[1];
+                        for(int i=0; i<PLAYERS.size(); i++){
+                            if(PLAYERS.get(i).getName().equals(playerName)){
+                                PLAYERS.remove(i);
+                                break;
+                            }
+                        }
+                        clientCount--;
+                        broadcast("sizeOfPlayersIs " + String.valueOf(PLAYERS.size()));
+
                     }
                 }
             } catch (IOException e) {

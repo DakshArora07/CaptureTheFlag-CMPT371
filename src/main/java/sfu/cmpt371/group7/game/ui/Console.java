@@ -1,5 +1,6 @@
 package sfu.cmpt371.group7.game.ui;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -20,6 +21,16 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class Console extends Application {
+
+    private static final Dotenv dotenv = Dotenv.configure()
+            .directory("./")
+            .filename("var.env")
+            .load();
+
+    private static final String ADDRESS = dotenv.get("ADDRESS");
+    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+
+
     static private Label countLabel;
     static private int totalCount = 0;
     private TextField nameField;
@@ -98,7 +109,7 @@ public class Console extends Application {
 
     private void connectToServer(){
         try {
-            socket = new Socket("localhost", 1234);
+            socket = new Socket(ADDRESS, PORT);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
         }
