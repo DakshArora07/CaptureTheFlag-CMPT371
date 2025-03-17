@@ -186,23 +186,28 @@ public class Maze extends Application {
         // Check if move is valid (not into barrier)
         if (newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X') {
             Platform.runLater(() -> {
-                // Remove old player position
+                // Remove player from old position first
+                // We need to find the StackPane that contains the player
                 gridPane.getChildren().removeIf(node ->
                         GridPane.getColumnIndex(node) == player.getY() &&
                                 GridPane.getRowIndex(node) == player.getX() &&
-                                node instanceof Rectangle && ((Rectangle) node).getFill() != Color.WHITE &&
-                                ((Rectangle) node).getFill() != Color.BLACK &&
-                                ((Rectangle) node).getFill() != Color.YELLOW);
+                                node instanceof StackPane);
 
                 // Update player position
                 player.setX(newX);
                 player.setY(newY);
 
-                // Add new player position
+                // Add player at new position
                 Rectangle rect = new Rectangle(30, 30);
                 rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
                 rect.setStroke(Color.GRAY);
-                gridPane.add(rect, newY, newX);
+
+                Text textNode = new Text(player.getName());
+                textNode.setFill(Color.WHITE);
+
+                // Stack them together
+                StackPane pane = new StackPane(rect, textNode);
+                gridPane.add(pane, newY, newX);
             });
         }
     }
