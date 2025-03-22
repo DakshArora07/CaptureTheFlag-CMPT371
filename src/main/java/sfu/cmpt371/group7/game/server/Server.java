@@ -66,6 +66,7 @@ public class Server {
             //System.out.println("uerakaaaaaaaaaaaaaa");
 
             for(int i=0; i<PLAYERS.size(); i++){
+                System.out.println("number of players: " + PLAYERS.size());
                 broadcast("newPlayer " + PLAYERS.get(i).getTeam() + " " + PLAYERS.get(i).getX() + " " + PLAYERS.get(i).getY() + " " + PLAYERS.get(i).getName());
             }
         }
@@ -129,7 +130,7 @@ public class Server {
                         checkGameStart();
                     }
                     else if (message.startsWith("movePlayer")) {
-                        // Format: movePlayer <team> <x> <y>
+                        // Format: movePlayer <name of player> <x> <y>
                         // Just broadcast this to all clients
                         broadcast(message);
                     }

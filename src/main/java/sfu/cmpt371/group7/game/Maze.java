@@ -1,6 +1,9 @@
 package sfu.cmpt371.group7.game;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -13,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,12 +49,14 @@ public class Maze extends Application {
     private Player localPlayer;
     private Label statusLabel;
     private Label name;
+    private Label timerLabel;
 
     public Maze(Player player) {
         localPlayer = player;
         grid = new char[rows][cols];
         players = new ArrayList<>();
         initGrid();
+        System.out.println("player name is " + player.getName());
     }
 
     public void initGrid() {
@@ -107,6 +113,11 @@ public class Maze extends Application {
             }
         }
 
+        // add a new timer for the player
+        timerLabel = new Label("Time left:  3:00");
+        timerLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dd3333; -fx-font-weight: bold;");
+        startTimer();
+
         Button exitButton = new Button("Exit");
         exitButton.setStyle("-fx-background-color: #ff0000; -fx-text-fill: white;");
         exitButton.setOnAction(e -> {
@@ -119,23 +130,40 @@ public class Maze extends Application {
         });
 
 
+        // Side panel
         VBox sidePanel = new VBox(10);
         sidePanel.setPadding(new Insets(10));
-        sidePanel.setStyle("-fx-background-color: #f0f0f0; -fx-border-color: gray; -fx-border-width: 1;");
+        sidePanel.setStyle("-fx-background-color: linear-gradient(to bottom, #eeeeee, #cccccc); "
+                + "-fx-border-color: gray; -fx-border-width: 1;");
         statusLabel = new Label("Players: 0");
         name = new Label("Name: " + localPlayer.getName());
-        statusLabel.setStyle("-fx-font-size: 12px;");
-        sidePanel.getChildren().addAll(statusLabel, name);
+        statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
+        name.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
+        sidePanel.getChildren().addAll(statusLabel, name, exitButton);
 
+        BorderPane topPane = new BorderPane();
+        topPane.setLeft(new Label(" "));
+        topPane.setCenter(timerLabel);
+        topPane.setRight(new Label(" "));
+        topPane.setPadding(new Insets(10, 0, 10, 0));
+
+        root.setTop(topPane);
         root.setRight(sidePanel);
         root.setCenter(gridPane);
 
-        Scene scene = new Scene(root, 800, 800); // Adjusted size for extra space
+        Scene scene = new Scene(root, 800, 800);
         stage.setTitle("Maze");
         stage.setScene(scene);
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.show();
+
+        // Fade transition on startup
+        FadeTransition fadeIn = new FadeTransition(Duration.seconds(1.5), root);
+        root.setOpacity(0);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
 
         scene.setOnKeyPressed(event ->{
             if(localPlayer != null) {
@@ -150,7 +178,7 @@ public class Maze extends Application {
                     if(checkValidMove(newX - 1, newY)) {
                         hasMoved = true;
                         newX--;
-                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                     }
                     else{
                         System.err.println("Invalid move");
@@ -159,7 +187,7 @@ public class Maze extends Application {
                     if(checkValidMove(newX + 1, newY)) {
                         hasMoved = true;
                         newX++;
-                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                     }
                     else{
                         System.err.println("Invalid move");
@@ -168,7 +196,7 @@ public class Maze extends Application {
                     if(checkValidMove(newX, newY - 1)) {
                         hasMoved = true;
                         newY--;
-                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                     }
                     else{
                         System.err.println("Invalid move");
@@ -177,7 +205,7 @@ public class Maze extends Application {
                     if(checkValidMove(newX, newY + 1)) {
                         hasMoved = true;
                         newY++;
-                        out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                     }
                     else{
                         System.err.println("Invalid move");
@@ -187,11 +215,31 @@ public class Maze extends Application {
                 if (hasMoved) {
                     localPlayer.setX(newX);
                     localPlayer.setY(newY);
-                    out.println("movePlayer " + localPlayer.getTeam() + " " + newX + " " + newY);
+                    out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                 }
             }
         });
 
+    }
+
+    private void startTimer() {
+        final int totalTime = 180;
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), event -> {
+                    String currentText = timerLabel.getText().replace("Time left: ", "");
+                    String[] parts = currentText.split(":");
+                    int minutes = Integer.parseInt(parts[0]);
+                    int seconds = Integer.parseInt(parts[1]);
+                    int totalSeconds = minutes * 60 + seconds;
+                    totalSeconds = Math.max(totalSeconds - 1, 0);
+
+                    int newMin = totalSeconds / 60;
+                    int newSec = totalSeconds % 60;
+                    timerLabel.setText(String.format("Time left: %d:%02d", newMin, newSec));
+                })
+        );
+        timeline.setCycleCount(totalTime);
+        timeline.play();
     }
 
     private boolean checkValidMove(int newX, int newY) {
@@ -253,18 +301,18 @@ public class Maze extends Application {
                 while ((message = in.readLine()) != null) {
                     String[] parts = message.split(" ");
                      if(parts[0].equals("movePlayer")) {
-                         String team = parts[1];
+                         String name = parts[1];
                          int newX = Integer.parseInt(parts[2]);
                          int newY = Integer.parseInt(parts[3]);
                          Platform.runLater(() -> { // ensures that the movePlayer call is executed safely on the JavaFX thread
                              Player player = players.stream()
-                                     .filter(p -> p.getTeam().equals(team) &&
+                                     .filter(p -> p.getName().equals(name) &&
                                              (localPlayer == null || !p.equals(localPlayer)))
                                      .findFirst()
                                      .orElse(null);
                              if (player != null) {
                                  movePlayer(player, newX, newY);
-                             } else if (localPlayer != null && localPlayer.getTeam().equals(team)) {
+                             } else if (localPlayer != null && localPlayer.getName().equals(name)) {
                                  movePlayer(localPlayer, newX, newY);
                              }
                          });

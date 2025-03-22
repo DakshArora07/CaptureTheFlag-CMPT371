@@ -160,4 +160,11 @@ public class Console extends Application {
             }
         }).start();
     }
+
+    private void validate(){
+    // we need validate from the client to the server that everything is okay. can be done in the starting after the maze is started.
+        // basically the server will send a message to the client to validate that everything is okay.
+        // done after everything is set up.
+        // if client is not okay then the server will send all the stuff again to the client and the game would be restarted.
+    }
 }
