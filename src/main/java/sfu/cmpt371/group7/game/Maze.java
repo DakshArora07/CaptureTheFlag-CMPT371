@@ -27,6 +27,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/*
+* this class is responsible for creating the maze and adding the players to the maze. ( MAZE = GRID)
+* the player can move in the grid using the W,A,S,D keys.
+* the player can exit the game using the exit button.
+* the player can see the total number of players in the game.
+* the player can see the time left to play the game.
+* the player can see the name of the player.
+* the player can see the flags in the maze.
+ */
 public class Maze extends Application {
 
     private static final Dotenv dotenv = Dotenv.configure()
@@ -51,6 +60,12 @@ public class Maze extends Application {
     private Label name;
     private Label timerLabel;
 
+    /*
+    * constructor to initialize the player and the grid.
+    * the grid is a 2D array of characters.
+    * the player is the object of the player class.
+    * the players is the list of all the players in the game. [ MIGHT NOT NEED IT. KEPT FOR NOW. TODO]
+     */
     public Maze(Player player) {
         localPlayer = player;
         grid = new char[rows][cols];
@@ -59,6 +74,9 @@ public class Maze extends Application {
         System.out.println("player name is " + player.getName());
     }
 
+    /*
+    * this function is used to initialize the grid.
+     */
     public void initGrid() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -69,6 +87,10 @@ public class Maze extends Application {
         addFlags();
     }
 
+    /*
+    * this function is used to add the barriers in the maze.
+    * will change the barriers to make it slightly more complex.
+     */
     public void addBarriers() {
         grid[1][1] = 'X';
         grid[1][2] = 'X';
@@ -81,6 +103,9 @@ public class Maze extends Application {
         grid[8][8] = 'X';
     }
 
+    /*
+    * this function is used to add the flags in the maze.
+     */
     public void addFlags(){
         grid[0][0] = 'F';
         grid[19][19] = 'F';
@@ -88,6 +113,14 @@ public class Maze extends Application {
         grid[19][0] = 'F';
     }
 
+    /*
+    * this function is used to start the game.
+    * see below for connectToServer, getNumberOfPlayers, listenForServerMessages.
+    * all the barriers are black
+    * all the flags are yellow
+    * all the empty spaces are white
+    * the player is red or blue depending on the team
+     */
     @Override
     public void start(Stage stage) throws IOException {
         System.out.println("Starting JavaFX application...");
@@ -165,6 +198,13 @@ public class Maze extends Application {
         fadeIn.setToValue(1);
         fadeIn.play();
 
+        /*
+        * event handler for the key pressed.
+        * based on what key is pressed, first the move is validated. valid move is a move that does not go out of the grid,
+        * does not go into any barrier or any other person. at the moment also does not go into the flags.
+        * the new position of the player is then broadcasted to all the other players so they can update the location.
+        * this ensures that all players can see the movement of the player in real time
+         */
         scene.setOnKeyPressed(event ->{
             if(localPlayer != null) {
                 int newX = localPlayer.getX();
@@ -222,6 +262,12 @@ public class Maze extends Application {
 
     }
 
+    /*
+    * this function is used to start the timer.
+    * the timer is set to 3 minutes.
+    * NOT WORKING AT THE MOMENT. NEED TO FIX IT.
+     */
+
     private void startTimer() {
         final int totalTime = 180;
         Timeline timeline = new Timeline(
@@ -242,12 +288,25 @@ public class Maze extends Application {
         timeline.play();
     }
 
+    /*
+    * this function is used to check if the move is valid.
+    * returns true or false
+     */
+
     private boolean checkValidMove(int newX, int newY) {
         return newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X' && grid[newX][newY] != 'F' && !players.stream().anyMatch(p -> p.getX() == newX && p.getY() == newY);
     }
 
-    // need to fix this part to make sure the movement is correct
 
+    /*
+    * this function is used to move the player.
+    * first the player is removed from the old position.
+    * then the player is added to the new position.
+    * the player is red or blue depending on the team.
+    * the player is a rectangle with the name of the player.
+    * the player is added to the gridpane.
+    * the args come from listenForServerMessages.
+     */
     private void movePlayer(Player player, int newX, int newY) {
         // Check if move is valid (not into barrier)
         if (newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X') {
@@ -278,12 +337,18 @@ public class Maze extends Application {
         }
     }
 
+    /*
+    * this function is used to connect to the server.
+     */
     private void connectToServer() throws IOException {
         socket = new Socket(ADDRESS, PORT);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
+    /*
+    * NOT BEING USED AT THE MOMENT.
+     */
     private void addPlayer() {
         String team = localPlayer.getTeam();
         int x = team.equals("red") ? new Random().nextInt(rows) : new Random().nextInt(rows);
@@ -294,6 +359,14 @@ public class Maze extends Application {
 
     }
 
+    /*
+    * this function is used to get listen for various messages from the server.
+    * the messages are movePlayer, newPlayer, sizeOfPlayersIs.
+    * movePlayer -> the player has moved. the new position of the player is sent to all the other players.
+    * newPlayer -> a new player has joined the game. the new player is added to the grid.
+    * sizeOfPlayersIs -> the total number of players in the game is received from the server.
+    * used to update the total number of players in the game.
+     */
     private void listenForServerMessages() {
         new Thread(() -> {
             try {
@@ -336,6 +409,11 @@ public class Maze extends Application {
         }).start();
     }
 
+    /*
+    * this function is used to add the player to the UI.
+    * the player is a rectangle with the name of the player.
+    * the player is red or blue depending on the team.
+     */
     private void addPlayerToUI(String playerName, String team, int x, int y) {
         Player player = new Player(team , x, y, playerName);
         players.add(player);
@@ -355,6 +433,9 @@ public class Maze extends Application {
         gridPane.add(pane, y, x);
     }
 
+    /*
+    * token to get the number of players in the game from the server
+     */
     private void getNumberOfPlayers() {
         out.println("tellMeTheCurrentPlayers");
     }

@@ -13,7 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/*
+ * this class is responsible for starting the server and handling the clients..
+ */
 public class Server {
+
+    /*
+    * used to get the port number and the minimum players required to start the game from the .even file in the root directory.
+     */
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("./")
             .filename("var.env")
@@ -22,7 +29,16 @@ public class Server {
     private static final int PORT_NUMBER = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS_REQUIRED = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
 
-
+    /*
+    * PORT = port number
+    * MIN_PLAYERS = minimum players required to start the game
+    * clients = list of clients connected to the server
+    * clientCount = total count of clients connected to the server
+    * gameStarted = boolean to check if the game has started or not
+    * random = to generate random numbers
+    * PLAYERS = list of players connected to the server
+    *
+     */
     private static final int PORT = PORT_NUMBER;
     private static final int MIN_PLAYERS = MIN_PLAYERS_REQUIRED; // Minimum players needed to start a game
     private List<ClientHandler> clients = new ArrayList<>();
@@ -35,6 +51,9 @@ public class Server {
         System.out.println("Server starting on port " + PORT);
     }
 
+    /*
+    * this method is responsible for starting the server and handling the clients.
+     */
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
@@ -50,6 +69,10 @@ public class Server {
         }
     }
 
+    /*
+    * this method is responsible for broadcasting the message to all the clients.
+    * message = message to be broadcasted
+     */
     private void broadcast(String message) {
         System.out.println("Broadcasting: " + message);
         for (ClientHandler client : clients) {
@@ -57,6 +80,15 @@ public class Server {
         }
     }
 
+    /*
+    * this method is responsible for checking if the game has started or not.
+    * if the game has not started and the client count is greater than or equal to the minimum players required to start the game,
+    * if the condition is satisfied, the game will start.
+    * the game will start by sending a message to all the clients to add all the players to the maze.
+    * the message will start a game. the message is received by the console class b/c that is where the player essentially is.
+    * the message is received by the console class and the maze class is initialized and the player object is passed to the maze class.
+    * check concole for more info.
+     */
     private void checkGameStart() {
         if (!gameStarted && clientCount >= MIN_PLAYERS) {
             // convey to all the players to add all the players to the maze
@@ -72,6 +104,10 @@ public class Server {
         }
     }
 
+    /*
+    * this class is responsible for handling the clients.
+    * the client handler is responsible for sending and receiving messages from the clients.
+     */
     private class ClientHandler implements Runnable {
         private Socket socket;
         private PrintWriter out;
@@ -91,6 +127,24 @@ public class Server {
             out.println(message);
         }
 
+        /*
+        * this method is responsible for receiving messages from the clients.
+        * the messages received are teamSelection and movePlayer.
+        * teamSelection is received when a player selects a team.
+        * movePlayer is received when a player moves.
+        * teamSelection -> the message is split and the team and the player name is extracted.
+        * the spawn position is determined based on the team.
+        * the player object is created and added to the PLAYERS list.
+        * the client count is incremented.
+        * the new count is broadcasted to all the clients.
+        * checkGameStart is called to check if the game should start or not.
+        * movePlayer -> the message is broadcasted to all the clients.
+        * tellMeTheCurrentPlayers -> the message is broadcasted to all the clients.
+        * exitGame -> the message is broadcasted to all the clients.
+        * the player is removed from the PLAYERS list.
+        * the client count is decremented.
+        * the new count is broadcasted to all the clients.
+         */
         @Override
         public void run() {
             try {
@@ -116,22 +170,22 @@ public class Server {
                             y = random.nextInt(10) + 1;
                         }
 
-                        // Increment client count
+                        // increment client count
                         clientCount++;
 
-                        // Create a new player object
+                        // create a new player object
                         Player player = new Player(team, x, y, playerName);
                         PLAYERS.add(player);
 
-                        // Notify all clients of new count
+                        // notify all clients of new count
                         broadcast("updateCount " + clientCount);
 
-                        // Check if we should start the game
+                        // check if we should start the game
                         checkGameStart();
                     }
                     else if (message.startsWith("movePlayer")) {
-                        // Format: movePlayer <name of player> <x> <y>
-                        // Just broadcast this to all clients
+                        // format: movePlayer <name of player> <x> <y>
+                        // just broadcast this to all clients
                         broadcast(message);
                     }
                     else if(message.startsWith("tellMeTheCurrentPlayers")){

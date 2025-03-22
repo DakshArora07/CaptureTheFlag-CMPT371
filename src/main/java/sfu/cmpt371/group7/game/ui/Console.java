@@ -20,8 +20,16 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/*
+* this class is responsible for getting the name and team of the player.
+* once MIN_PLAYERS_REQUIRED are connected to the server, the game will start.
+* the player will be passed onto the maze class to basically put the player in the maze. (grid bulalo)
+ */
 public class Console extends Application {
 
+    /*
+    * used to get the address, port number from the .even file in the root directory.
+     */
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("./")
             .filename("var.env")
@@ -30,18 +38,21 @@ public class Console extends Application {
     private static final String ADDRESS = dotenv.get("ADDRESS");
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
 
-
+    /*
+    * countLabel = label to show the total count of players
+    * totalCount = total count of players
+    * nameField = text field to enter the name of the player
+    * socket = socket to connect to the server
+    * in = to read the data from the server
+    * out = to write the data to the server
+    * player = object of the player class
+     */
     static private Label countLabel;
     static private int totalCount = 0;
     private TextField nameField;
-    // global variables required for the server, to send messages and to get the updates back from the server
-    // in used to read the messages from the server
-    // out used to send messages to the server
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-
-    // each console will have a player and the player will be passed onto the maze class to basically put the player in the maze.
      Player player = new Player();
 
     public static void main(String[] args) {
@@ -103,10 +114,17 @@ public class Console extends Application {
 
     }
 
+    /*
+    used to send the message to the server using the out object.
+     */
     private void sendToServer(String message) {
         out.println(message);
     }
 
+
+    /*
+    * used to connect to the server using the socket object.
+     */
     private void connectToServer(){
         try {
             socket = new Socket(ADDRESS, PORT);
@@ -118,14 +136,21 @@ public class Console extends Application {
             e.printStackTrace();
         }
     }
-
+    /*
+    * NOT IN USE AT THE MOMENT
+     */
     private void updateCount() {
         totalCount++;
         countLabel.setText("Total count: " + totalCount);
     }
 
+    /*
+    * used to get updates from the server. updates at the moment are the total count of players and the start game message.
+    * updateCount -> if this message is received then the total count of players is updated.
+    * startGame -> if this message is received then the game is started by initializing the maze class
+    * and passing the player object to the maze class.
+     */
     private void getUpdatesFromServer(){
-        // the only update going to be recieved, is the total new count of players
         new Thread(() -> {
             try {
                 String message;
@@ -161,6 +186,11 @@ public class Console extends Application {
         }).start();
     }
 
+    /*
+    * NOT IN USE AT THE MOMENT
+    * will make sure that the player is validated before starting the game.
+    * 2 step verification.
+     */
     private void validate(){
     // we need validate from the client to the server that everything is okay. can be done in the starting after the maze is started.
         // basically the server will send a message to the client to validate that everything is okay.
