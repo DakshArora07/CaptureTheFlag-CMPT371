@@ -53,7 +53,7 @@ public class Console extends Application {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-     Player player = new Player();
+     Player player;
 
     public static void main(String[] args) {
         launch(args);
@@ -78,6 +78,7 @@ public class Console extends Application {
             String playerName = nameField.getText().trim();
             if(!playerName.isEmpty()){
                 sendToServer("teamSelection red " +  playerName);
+                player = new Player("red", 0,0, playerName);
                 player.setName(playerName);
                 player.setTeam("red");
             }
@@ -92,6 +93,7 @@ public class Console extends Application {
             String playerName = nameField.getText().trim();
             if(!playerName.isEmpty()){
                 sendToServer("teamSelection blue " + playerName);
+                player = new Player("blue", 0, 0, playerName);
                 player.setName(playerName);
                 player.setTeam("blue");
             }
@@ -177,6 +179,29 @@ public class Console extends Application {
                                 e.printStackTrace();
                             }
                         });
+                    }
+                    else if(message.startsWith(("sendingPlayer"))){
+                        // name team x y
+                        try {
+                            String[] tokens = message.split(" ");
+                            if(player.getName().equals(tokens[1])) {
+                                player.setName(tokens[1]);
+                                player.setTeam(tokens[2]);
+                                player.setX(Integer.parseInt(tokens[3]));
+                                player.setY(Integer.parseInt(tokens[4]));
+                            }
+                            else{
+                                System.out.println("not for me. it is for someone elseeeeeeeeeeeeeee");
+                                System.out.println("the name of that someone else is: " + tokens[1]);
+                                System.out.println("security issue???? meh");
+                            }
+                        }
+                        catch (Exception e){
+                            System.err.println("error in console -> sending player");
+                            //player.setX(0);
+                            //player.setY(0);
+                            e.printStackTrace();
+                        }
                     }
                 }
             } catch (IOException e) {

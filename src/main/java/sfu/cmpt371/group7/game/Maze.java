@@ -206,50 +206,31 @@ public class Maze extends Application {
         * the new position of the player is then broadcasted to all the other players so they can update the location.
         * this ensures that all players can see the movement of the player in real time
          */
-        scene.setOnKeyPressed(event ->{
-            if(localPlayer != null) {
+        scene.setOnKeyPressed(event -> {
+            if (localPlayer != null) {
                 int newX = localPlayer.getX();
                 int newY = localPlayer.getY();
                 boolean hasMoved = false;
 
-                System.out.println("Key pressed: " + event.getCode());
-
-
                 if (event.getCode() == KeyCode.W) {
-                    if(checkValidMove(newX - 1, newY)) {
-                        hasMoved = true;
+                    if (checkValidMove(newX - 1, newY)) {
                         newX--;
-                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
-                    }
-                    else{
-                        System.err.println("Invalid move");
+                        hasMoved = true;
                     }
                 } else if (event.getCode() == KeyCode.S) {
-                    if(checkValidMove(newX + 1, newY)) {
-                        hasMoved = true;
+                    if (checkValidMove(newX + 1, newY)) {
                         newX++;
-                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
-                    }
-                    else{
-                        System.err.println("Invalid move");
+                        hasMoved = true;
                     }
                 } else if (event.getCode() == KeyCode.A) {
-                    if(checkValidMove(newX, newY - 1)) {
-                        hasMoved = true;
+                    if (checkValidMove(newX, newY - 1)) {
                         newY--;
-                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
-                    }
-                    else{
-                        System.err.println("Invalid move");
+                        hasMoved = true;
                     }
                 } else if (event.getCode() == KeyCode.D) {
-                    if(checkValidMove(newX, newY + 1)) {
-                        hasMoved = true;
+                    if (checkValidMove(newX, newY + 1)) {
                         newY++;
-                        out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
-                    }
-                    else{
-                        System.err.println("Invalid move");
+                        hasMoved = true;
                     }
                 }
 

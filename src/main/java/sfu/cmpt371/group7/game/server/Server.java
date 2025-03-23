@@ -177,6 +177,9 @@ public class Server {
                         Player player = new Player(team, x, y, playerName);
                         PLAYERS.add(player);
 
+                        // send the player to the console class. send the player as packet
+                        broadcast("sendingPlayer " + player.getName() + " " + player.getTeam() + " " + player.getX() + " " + player.getY());
+
                         // notify all clients of new count
                         broadcast("updateCount " + clientCount);
 

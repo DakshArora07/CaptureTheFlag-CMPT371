@@ -9,13 +9,13 @@ public class Player {
     private boolean capturedFlag;
 
     // this is causing problem. need to pass agrs for the x and y coordinates
-    public Player(){
-        team = "";
-        x = 0;
-        y = 0;
-        name = "";
-        capturedFlag = false;
-    }
+//    public Player(){
+//        team = "";
+//        x = 0;
+//        y = 0;
+//        name = "";
+//        capturedFlag = false;
+//    }
 
 
     public Player(String team, int x, int y, String name){
