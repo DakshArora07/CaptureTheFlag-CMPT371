@@ -17,6 +17,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import sfu.cmpt371.group7.game.ui.Results;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -268,24 +269,45 @@ public class Maze extends Application {
     * NOT WORKING AT THE MOMENT. NEED TO FIX IT.
      */
 
+    /*
+     * This function initializes and starts a 3-minute countdown timer.
+     * It sets the initial timer display and updates it every second.
+     */
     private void startTimer() {
-        final int totalTime = 180;
-        Timeline timeline = new Timeline(
+        final int totalTime = 180; // 3 minutes in seconds
+
+        timerLabel.setText(String.format("Time left: %d:%02d", totalTime / 60, totalTime % 60));
+
+        final Timeline[] timelineRef = new Timeline[1];
+
+        // Create the timeline with access to the reference
+        timelineRef[0] = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> {
                     String currentText = timerLabel.getText().replace("Time left: ", "");
                     String[] parts = currentText.split(":");
-                    int minutes = Integer.parseInt(parts[0]);
-                    int seconds = Integer.parseInt(parts[1]);
-                    int totalSeconds = minutes * 60 + seconds;
-                    totalSeconds = Math.max(totalSeconds - 1, 0);
 
-                    int newMin = totalSeconds / 60;
-                    int newSec = totalSeconds % 60;
-                    timerLabel.setText(String.format("Time left: %d:%02d", newMin, newSec));
+                    try {
+                        int minutes = Integer.parseInt(parts[0].trim());
+                        int seconds = Integer.parseInt(parts[1].trim());
+                        int totalSeconds = minutes * 60 + seconds;
+                        totalSeconds = Math.max(totalSeconds - 1, 0);
+
+                        int newMin = totalSeconds / 60;
+                        int newSec = totalSeconds % 60;
+                        timerLabel.setText(String.format("Time left: %d:%02d", newMin, newSec));
+
+                        if (totalSeconds == 0) {
+                            timelineRef[0].stop();
+                            out.println("gameOver");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing time: " + e.getMessage());
+                    }
                 })
         );
-        timeline.setCycleCount(totalTime);
-        timeline.play();
+
+        timelineRef[0].setCycleCount(Timeline.INDEFINITE);
+        timelineRef[0].play();
     }
 
     /*
@@ -391,6 +413,7 @@ public class Maze extends Application {
                          });
                      }
                      else if(parts[0].equals("newPlayer")){
+                         System.out.println("HEREEEEEEEEE");
                             String team = parts[1];
                             int x = Integer.parseInt(parts[2]);
                             int y = Integer.parseInt(parts[3]);
@@ -402,11 +425,25 @@ public class Maze extends Application {
                          int playerCount = Integer.parseInt(parts[1]);
                             Platform.runLater(() -> statusLabel.setText("Players: " + playerCount));
                      }
+
+                     else if(parts[0].equals("gameOver")){
+                         // we would have the info of the winning team here.
+                         // open the who won stage to show who won the game
+                            Platform.runLater(() ->{
+                                Results results = new Results(new Stage(), "<the winning team>");
+                                results.showResults();
+                            });
+                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void validate(){
+        if(localPlayer == null)
+        out.println("validate " + localPlayer.getName());
     }
 
     /*

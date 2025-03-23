@@ -209,6 +209,11 @@ public class Server {
                         broadcast("sizeOfPlayersIs " + String.valueOf(PLAYERS.size()));
 
                     }
+                    else if(message.startsWith("gameOver")){
+                        // the game is over b\c the timer ran out.
+                        // send message to all the players in the game and compute the winner based on who captured the most flags
+                        broadcast("gameOver " + "<send the winning team info here>");
+                    }
                 }
             } catch (IOException e) {
                 System.err.println("Error in client handler: " + e.getMessage());
