@@ -162,12 +162,12 @@ public class Server {
                         int x, y;
                         if (team.equals("red")) {
                             // Red team spawns on the left side
-                            x = random.nextInt(5) + 1;
-                            y = random.nextInt(10) + 1;
+                            x = random.nextInt(10) + 1;
+                            y = 0;
                         } else {
                             // Blue team spawns on the right side
-                            x = random.nextInt(5) + 14;
-                            y = random.nextInt(10) + 1;
+                            x = random.nextInt(10) + 1;
+                            y = 19;
                         }
 
                         // increment client count

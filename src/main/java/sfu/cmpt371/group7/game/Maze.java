@@ -93,25 +93,39 @@ public class Maze extends Application {
     * will change the barriers to make it slightly more complex.
      */
     public void addBarriers() {
-        grid[1][1] = 'X';
-        grid[1][2] = 'X';
-        grid[2][2] = 'X';
-        grid[3][4] = 'X';
-        grid[4][4] = 'X';
-        grid[5][6] = 'X';
-        grid[6][6] = 'X';
-        grid[7][8] = 'X';
-        grid[8][8] = 'X';
+        // Left-middle vertical barrier
+        for (int i = 4; i <= 12; i++) {
+            grid[i][5] = 'X';
+        }
+
+        // Right-middle vertical barrier
+        for (int i = 7; i <= 14; i++) {
+            grid[i][15] = 'X';
+        }
+
+        // Bottom-middle horizontal barrier
+        for (int j = 7; j <= 15; j++) {
+            grid[17][j] = 'X';
+        }
+
+        // Add some small gaps to make barriers more interesting
+        grid[7][5] = ' ';  // Gap in left barrier
+        grid[12][14] = ' '; // Gap in right barrier
+        grid[16][10] = ' '; // Gap in bottom barrier
     }
 
     /*
     * this function is used to add the flags in the maze.
      */
-    public void addFlags(){
-        grid[0][0] = 'F';
-        grid[19][19] = 'F';
-        grid[0][19] = 'F';
-        grid[19][0] = 'F';
+    public void addFlags() {
+        // Flag behind left barrier
+        grid[8][7] = 'F';
+
+        // Flag behind right barrier
+        grid[10][13] = 'F';
+
+        // Flag below bottom barrier
+        grid[18][10] = 'F';
     }
 
     /*
@@ -297,7 +311,7 @@ public class Maze extends Application {
      */
 
     private boolean checkValidMove(int newX, int newY) {
-        return newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X' && grid[newX][newY] != 'F' && !players.stream().anyMatch(p -> p.getX() == newX && p.getY() == newY);
+        return newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X' && !players.stream().anyMatch(p -> p.getX() == newX && p.getY() == newY);
     }
 
 
