@@ -157,6 +157,8 @@ public class Maze extends Application {
         System.out.println("Starting JavaFX application...");
         connectToServer();
         getNumberOfPlayers();
+        assert(localPlayer != null);
+        validatePlayerCount(players.size());
         sendFlagCoordinates();
         listenForServerMessages();
         gridPane = new GridPane();
@@ -490,6 +492,49 @@ public class Maze extends Application {
                              flag3.setCaptured(true);
                          }
                      }
+
+                     else if(parts[0].equals("sendingPlayer")){
+                         // Format: sendingPlayer <name> <team> <x> <y>
+                         String playerName = parts[1];
+                         String team = parts[2];
+                         int x = Integer.parseInt(parts[3]);
+                         int y = Integer.parseInt(parts[4]);
+
+                         Platform.runLater(() -> {
+                             // Check if player already exists in our list
+                             Player existingPlayer = players.stream()
+                                     .filter(p -> p.getName().equals(playerName))
+                                     .findFirst()
+                                     .orElse(null);
+
+                             if (existingPlayer != null) {
+                                 // Remove existing player representation from UI
+                                 gridPane.getChildren().removeIf(node ->
+                                         GridPane.getColumnIndex(node) == existingPlayer.getY() &&
+                                                 GridPane.getRowIndex(node) == existingPlayer.getX() &&
+                                                 node instanceof StackPane);
+
+                                 // Update position
+                                 existingPlayer.setX(x);
+                                 existingPlayer.setY(y);
+
+                                 // Add player at new position
+                                 Rectangle rect = new Rectangle(30, 30);
+                                 rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
+                                 rect.setStroke(Color.GRAY);
+
+                                 Text textNode = new Text(playerName);
+                                 textNode.setFill(Color.WHITE);
+
+                                 // Stack them together
+                                 StackPane pane = new StackPane(rect, textNode);
+                                 gridPane.add(pane, y, x);
+                             } else {
+                                 // New player, add to UI
+                                 addPlayerToUI(playerName, team, x, y);
+                             }
+                         });
+                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -497,9 +542,37 @@ public class Maze extends Application {
         }).start();
     }
 
-    private void validate(){
-        if(localPlayer == null)
-        out.println("validate " + localPlayer.getName());
+    private void validatePlayerCount(int expectedCount) {
+        // Wait a bit for UI updates to complete
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            // Count actual player rectangles in the grid
+            int actualCount = 0;
+            for (javafx.scene.Node node : gridPane.getChildren()) {
+                if (node instanceof StackPane) {
+                    StackPane stack = (StackPane) node;
+                    for (javafx.scene.Node child : stack.getChildren()) {
+                        if (child instanceof Rectangle) {
+                            Rectangle rect = (Rectangle) child;
+                            Color fill = (Color) rect.getFill();
+                            // Check if it's red or blue (a player)
+                            if (fill.equals(Color.RED) || fill.equals(Color.BLUE)) {
+                                actualCount++;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If counts don't match, request resend
+            if (actualCount < expectedCount) {
+                System.out.println("Player count mismatch: Expected " + expectedCount +
+                        " but found " + actualCount + ". Requesting resend.");
+                out.println("resendPlayers");
+            }
+        }));
+
+        timeline.play();
     }
 
     /*

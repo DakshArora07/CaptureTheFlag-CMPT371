@@ -267,6 +267,16 @@ public class Server {
                             e.printStackTrace();
                         }
                     }
+
+                    else if(message.startsWith("resendPlayers")) {
+                        System.out.println("Resending all players to client");
+                        // Re-broadcast all current players to ensure client sees everyone
+                        for(Player player : PLAYERS) {
+                            sendMessage("sendingPlayer " + player.getName() + " " + player.getTeam()
+                                    + " " + player.getX() + " " + player.getY());
+                        }
+                    }
+
                 }
             } catch (IOException e) {
                 System.err.println("Error in client handler: " + e.getMessage());
