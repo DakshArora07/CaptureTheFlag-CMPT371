@@ -108,18 +108,28 @@ public class Server {
         }
     }
 
+    /*
+    * checks if a move has resulted in capturing a flag.
+    * if yes then 2 broadcast message is sent to all the clients.
+    * 1st is flagCaptured <playerName> <flagName>
+    * 2nd is lockFlag <flagName>
+    * 2nd will lock the flag for all the other players and they will not be able to capture the flag.
+     */
     private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
         if (flag1.getX() == x && flag1.getY() == y) {
             flag1.setCaptured(true);
             broadcast("flagCaptured " + name + " " + flag1.getName());
+            broadcast("lockFlag " + flag1.getName());
             return true;
         } else if (flag2.getX() == x && flag2.getY() == y) {
             flag2.setCaptured(true);
             broadcast("flagCaptured " + name + " " + flag2.getName());
+            broadcast("lockFlag " + flag2.getName());
             return true;
         } else if (flag3.getX() == x && flag3.getY() == y) {
             flag3.setCaptured(true);
             broadcast("flagCaptured " + name + " " + flag3.getName());
+            broadcast("lockFlag " + flag3.getName());
             return true;
         }
         else{

@@ -332,7 +332,6 @@ public class Maze extends Application {
         return newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X' && !players.stream().anyMatch(p -> p.getX() == newX && p.getY() == newY);
     }
 
-
     /*
     * this function is used to move the player.
     * first the player is removed from the old position.
@@ -469,6 +468,19 @@ public class Maze extends Application {
                          Platform.runLater(() ->{
                              flagCaptureLabel.setText("player " + playerName + " has captured " + flagName);
                          });
+                     }
+
+                     else if(parts[0].equals("lockFlag")){
+                         String flagName = parts[1];
+                         if(flag1.getName().equals(flagName)){
+                             flag1.setCaptured(true);
+                         }
+                         else if(flag2.getName().equals(flagName)){
+                             flag2.setCaptured(true);
+                         }
+                         else if(flag3.getName().equals(flagName)){
+                             flag3.setCaptured(true);
+                         }
                      }
                 }
             } catch (IOException e) {
