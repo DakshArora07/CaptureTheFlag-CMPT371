@@ -7,6 +7,7 @@ import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,6 +20,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import sfu.cmpt371.group7.game.logistics.Flag;
 import sfu.cmpt371.group7.game.logistics.Player;
+import sfu.cmpt371.group7.game.ui.CaptureTimer;
 import sfu.cmpt371.group7.game.ui.Results;
 
 import java.io.BufferedReader;
@@ -66,6 +68,7 @@ public class Maze extends Application {
     private int blueFlagCount = 0;
     private Label flagCountLabel;
     private Label flagCaptureLabel;
+    private CaptureTimer captureTimer;
     private Flag flag1; // the right one
     private Flag flag2; // left
     private Flag flag3; // bottom
@@ -213,14 +216,19 @@ public class Maze extends Application {
         topPane.setRight(new Label(" "));
         topPane.setPadding(new Insets(10, 0, 10, 0));
 
+        captureTimer = new CaptureTimer();
+
         root.setTop(topPane);
         root.setRight(sidePanel);
         root.setCenter(gridPane);
+        root.setBottom(captureTimer);
+        root.setPadding(new Insets(0, 0, 30, 0));
+        captureTimer.start();
 
         Scene scene = new Scene(root, 800, 800);
         stage.setTitle("Maze");
         stage.setScene(scene);
-        stage.setResizable(false);
+        stage.setResizable(true);
         stage.centerOnScreen();
         stage.show();
 
