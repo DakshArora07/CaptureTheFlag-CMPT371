@@ -67,7 +67,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>sfu.cmpt371.group7.game/sfu.cmpt371.group7.game.HelloApplication</mainClass>
+                            <mainClass>sfu.cmpt371.group7.game/sfu.cmpt371.group7.game.ui.Console</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
