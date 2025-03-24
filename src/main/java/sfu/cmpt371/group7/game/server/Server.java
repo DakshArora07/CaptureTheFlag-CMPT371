@@ -1,7 +1,8 @@
 package sfu.cmpt371.group7.game.server;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import sfu.cmpt371.group7.game.Player;
+import sfu.cmpt371.group7.game.logistics.Flag;
+import sfu.cmpt371.group7.game.logistics.Player;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,6 +47,9 @@ public class Server {
     private boolean gameStarted = false;
     private final Random random = new Random();
     private final List<Player> PLAYERS = new ArrayList<>();
+    private Flag flag1; // the right one
+    private Flag flag2; // left
+    private Flag flag3; // bottom
 
     public Server() {
         System.out.println("Server starting on port " + PORT);
@@ -103,6 +107,26 @@ public class Server {
             }
         }
     }
+
+    private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
+        if (flag1.getX() == x && flag1.getY() == y) {
+            flag1.setCaptured(true);
+            broadcast("flagCaptured " + name + " " + flag1.getName());
+            return true;
+        } else if (flag2.getX() == x && flag2.getY() == y) {
+            flag2.setCaptured(true);
+            broadcast("flagCaptured " + name + " " + flag2.getName());
+            return true;
+        } else if (flag3.getX() == x && flag3.getY() == y) {
+            flag3.setCaptured(true);
+            broadcast("flagCaptured " + name + " " + flag3.getName());
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
 
     /*
     * this class is responsible for handling the clients.
@@ -189,6 +213,9 @@ public class Server {
                     else if (message.startsWith("movePlayer")) {
                         // format: movePlayer <name of player> <x> <y>
                         // just broadcast this to all clients
+                        // also check if the player has captured a flag.
+                        // <name of player> <x> <y>
+                        checkIfPlayerCapturedFlag(parts[1], Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
                         broadcast(message);
                     }
                     else if(message.startsWith("tellMeTheCurrentPlayers")){
@@ -216,6 +243,19 @@ public class Server {
                         // the game is over b\c the timer ran out.
                         // send message to all the players in the game and compute the winner based on who captured the most flags
                         broadcast("gameOver " + "<send the winning team info here>");
+                    }
+                    else if(message.startsWith("flagCoordinates")){
+                        // format <flagCoordinates> <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
+                        try {
+                            flag1 = new Flag(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), "flag1");
+                            flag2 = new Flag(Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), "flag2");
+                            flag3 = new Flag(Integer.parseInt(parts[5]), Integer.parseInt(parts[6]), "flag3");
+                        }
+                        catch (Exception e){
+                            System.err.println("error in flagCoordinates");
+                            System.err.println("format might be wrong");
+                            e.printStackTrace();
+                        }
                     }
                 }
             } catch (IOException e) {

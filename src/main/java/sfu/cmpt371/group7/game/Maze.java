@@ -17,6 +17,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import sfu.cmpt371.group7.game.logistics.Flag;
+import sfu.cmpt371.group7.game.logistics.Player;
 import sfu.cmpt371.group7.game.ui.Results;
 
 import java.io.BufferedReader;
@@ -60,6 +62,13 @@ public class Maze extends Application {
     private Label statusLabel;
     private Label name;
     private Label timerLabel;
+    private int redFlagCount = 0;
+    private int blueFlagCount = 0;
+    private Label flagCountLabel;
+    private Label flagCaptureLabel;
+    private Flag flag1; // the right one
+    private Flag flag2; // left
+    private Flag flag3; // bottom
 
     /*
     * constructor to initialize the player and the grid.
@@ -126,6 +135,10 @@ public class Maze extends Application {
 
         // Flag below bottom barrier
         grid[18][10] = 'F';
+
+        flag1 = new Flag(8, 7, "flag1");
+        flag2 = new Flag(10, 13, "flag2");
+        flag3 = new Flag(18, 10, "flag3");
     }
 
     /*
@@ -141,9 +154,14 @@ public class Maze extends Application {
         System.out.println("Starting JavaFX application...");
         connectToServer();
         getNumberOfPlayers();
+        sendFlagCoordinates();
         listenForServerMessages();
         gridPane = new GridPane();
         root = new BorderPane();
+        flagCountLabel = new Label("Red: " + redFlagCount + " Blue: " + blueFlagCount);
+        flagCaptureLabel = new Label("No flags captured yet");
+        flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
+
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -187,7 +205,7 @@ public class Maze extends Application {
         name = new Label("Name: " + localPlayer.getName());
         statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
         name.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
-        sidePanel.getChildren().addAll(statusLabel, name, exitButton);
+        sidePanel.getChildren().addAll(statusLabel, name, exitButton, flagCountLabel, flagCaptureLabel);
 
         BorderPane topPane = new BorderPane();
         topPane.setLeft(new Label(" "));
@@ -375,6 +393,21 @@ public class Maze extends Application {
 
 
     }
+    /*
+    * send the current coordinates of the flags to the server.
+     */
+    private void sendFlagCoordinates(){
+        grid[8][7] = 'F';
+
+        // Flag behind right barrier
+        grid[10][13] = 'F';
+
+        // Flag below bottom barrier
+        grid[18][10] = 'F';
+
+        out.println("flagCoordinates " + flag1.getX() + " " + flag1.getY() + " " + flag2.getX() + " " + flag2.getY() + " " + flag3.getX() + " " + flag3.getY());
+    }
+
 
     /*
     * this function is used to get listen for various messages from the server.
@@ -429,6 +462,14 @@ public class Maze extends Application {
                                 results.showResults();
                             });
                      }
+
+                     else if(parts[0].equals("flagCaptured")){
+                         String playerName = parts[1];
+                         String flagName = parts[2];
+                         Platform.runLater(() ->{
+                             flagCaptureLabel.setText("player " + playerName + " has captured " + flagName);
+                         });
+                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -440,6 +481,11 @@ public class Maze extends Application {
         if(localPlayer == null)
         out.println("validate " + localPlayer.getName());
     }
+
+    /*
+    * check if a move has result in the player capturing the flag.
+    * get the name of the player to show to the other players that x has captured
+     */
 
     /*
     * this function is used to add the player to the UI.

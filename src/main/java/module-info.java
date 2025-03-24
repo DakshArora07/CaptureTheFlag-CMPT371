@@ -8,4 +8,6 @@ module sfu.cmpt371.group7.game {
     exports sfu.cmpt371.group7.game;
     opens sfu.cmpt371.group7.game.ui to javafx.fxml;
     exports sfu.cmpt371.group7.game.ui;
+    opens sfu.cmpt371.group7.game.logistics to javafx.fxml;
+    exports sfu.cmpt371.group7.game.logistics;
 }

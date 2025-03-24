@@ -12,7 +12,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import sfu.cmpt371.group7.game.Maze;
-import sfu.cmpt371.group7.game.Player;
+import sfu.cmpt371.group7.game.logistics.Player;
 
 import java.io.BufferedReader;
 import java.io.IOException;
