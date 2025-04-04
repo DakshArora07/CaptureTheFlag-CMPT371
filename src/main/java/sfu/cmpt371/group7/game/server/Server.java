@@ -19,7 +19,6 @@ import java.util.Random;
  */
 public class Server {
 
-    // Load configuration from .env file
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("./")
             .filename("var.env")
@@ -28,11 +27,9 @@ public class Server {
     private static final int PORT_NUMBER = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS_REQUIRED = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
 
-    // Server constants
     private static final int PORT = PORT_NUMBER;
     private static final int MIN_PLAYERS = MIN_PLAYERS_REQUIRED;
 
-    // Game state
     private List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
@@ -229,6 +226,7 @@ public class Server {
                     switch (messageType) {
                         case "teamSelection":
                             handleTeamSelection(parts);
+                            sendClientToAllPlayers(message);
                             break;
                         case "movePlayer":
                             handleMovePlayer(parts);
@@ -301,6 +299,21 @@ public class Server {
             }
         }
 
+        /*
+        * send client has joined team color to all players
+         */
+        private void sendClientToAllPlayers(String message) {
+            for(ClientHandler client : clients) {
+                if (client != null && !client.equals(this)) {
+                    String team = message.split(" ")[1];
+                    String playerName = message.split(" ")[2];
+
+                    String info = "showPlayerJoined " + team + " " + playerName;
+                    client.sendMessage(info);
+                }
+            }
+        }
+
         /**
          * handle move player message
          * first we update the location of the player and then we check if the player has captured a flag
@@ -368,7 +381,7 @@ public class Server {
          * handle flag coordinates message
          */
         private void handleFlagCoordinates(String[] parts) {
-            // Format: flagCoordinates <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
+            //flagCoordinates <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
             if (parts.length >= 7) {
                 try {
                     flag1 = new Flag(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), "flag1");
@@ -428,10 +441,10 @@ public class Server {
 
         /**
          * handle client disconnection
+         * remove the client from the server and from the game
          */
         private void handleDisconnect() {
             try {
-                // If player was registered, remove them
                 if (playerName != null) {
                     PLAYERS.removeIf(p -> p.getName().equals(playerName));
                     clientCount--;

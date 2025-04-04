@@ -46,19 +46,20 @@ public class Console extends Application {
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
 
-    // UI components
+
     private static Label countLabel;
+    private static Label newPlayerLabel;
     private static int totalCount = 0;
     private TextField nameField;
     private Button redButton;
     private Button blueButton;
 
-    // Network
+
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
 
-    // Game state
+
     private Player player;
     private Stage primaryStage;
     private boolean gameStarting = false;
@@ -135,7 +136,11 @@ public class Console extends Application {
         countLabel.setTextFill(Color.WHITE);
         countLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
-        counterBox.getChildren().addAll(counterPrefix, countLabel);
+        newPlayerLabel = new Label("New player joined");
+        newPlayerLabel.setTextFill(Color.LIGHTGRAY);
+        newPlayerLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+
+        counterBox.getChildren().addAll(counterPrefix, countLabel, newPlayerLabel);
 
         // Name input section
         VBox nameSection = new VBox(8);
@@ -353,6 +358,9 @@ public class Console extends Application {
                     } else if (message.startsWith("sendingPlayer")) {
                         handlePlayerData(message);
                     }
+                    else if(message.startsWith("showPlayerJoined")){
+                        showPlayerJoined(message);
+                    }
                 }
             } catch (IOException e) {
                 System.err.println("Error reading from server: " + e.getMessage());
@@ -432,6 +440,23 @@ public class Console extends Application {
             System.err.println("Error parsing player data: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void showPlayerJoined(String message){
+        String team = message.split(" ")[1];
+        String name = message.split(" ")[2];
+
+        Platform.runLater(() -> {
+            newPlayerLabel.setText(name + " joined " + team + " team");
+            newPlayerLabel.setVisible(true);
+            Timeline timeline = new Timeline(
+                    new KeyFrame(Duration.seconds(2), evt -> {
+                        newPlayerLabel.setVisible(false);
+                    })
+            );
+            timeline.play();
+        });
+
     }
 
     /**
