@@ -1,16 +1,25 @@
 package sfu.cmpt371.group7.game.ui;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import sfu.cmpt371.group7.game.Maze;
 import sfu.cmpt371.group7.game.logistics.Player;
 
@@ -19,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+
 
 /**
  * This class is responsible for getting the name and team of the player.
@@ -34,6 +44,7 @@ public class Console extends Application {
 
     private static final String ADDRESS = dotenv.get("ADDRESS");
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+    private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
 
     // UI components
     private static Label countLabel;
@@ -99,41 +110,62 @@ public class Console extends Application {
      * Create the user interface
      */
     private void createUI(Stage stage) {
-        // Create count label
-        countLabel = new Label("Total count: " + totalCount);
-        countLabel.setStyle("-fx-font-size: 16px;");
+        // Create styled root container
+        VBox root = new VBox(20);
+        root.setPadding(new Insets(30));
+        root.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); -fx-background-radius: 8;");
+        root.setAlignment(Pos.CENTER);
 
-        // Create name input
-        Label nameLabel = new Label("Enter your name: ");
-        nameLabel.setStyle("-fx-font-size: 16px;");
+        // Game title
+        Label titleLabel = new Label("CAPTURE THE FLAG");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
+        titleLabel.setTextFill(Color.WHITE);
+        titleLabel.setEffect(new DropShadow(10, Color.BLACK));
+
+        // Player counter with styled box
+        HBox counterBox = new HBox(10);
+        counterBox.setAlignment(Pos.CENTER);
+        counterBox.setPadding(new Insets(10, 20, 10, 20));
+        counterBox.setStyle("-fx-background-color: rgba(0,0,0,0.3); -fx-background-radius: 5;");
+
+        Label counterPrefix = new Label("Players:");
+        counterPrefix.setTextFill(Color.LIGHTGRAY);
+
+        countLabel = new Label(totalCount + " / " + MIN_PLAYERS);
+        countLabel.setTextFill(Color.WHITE);
+        countLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+
+        counterBox.getChildren().addAll(counterPrefix, countLabel);
+
+        // Name input section
+        VBox nameSection = new VBox(8);
+        nameSection.setAlignment(Pos.CENTER);
+
+        Label nameLabel = new Label("ENTER YOUR NAME");
+        nameLabel.setTextFill(Color.WHITE);
+        nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+
         nameField = new TextField();
-        nameField.setStyle("-fx-font-size: 16px;");
+        nameField.setPromptText("Your player name");
+        nameField.setPrefHeight(40);
+        nameField.setMaxWidth(300);
+        nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
 
-        // Create team buttons
-        redButton = createRedTeamButton();
-        blueButton = createBlueTeamButton();
+        nameSection.getChildren().addAll(nameLabel, nameField);
 
-        // Create layout
-        HBox buttonBox = new HBox(10, redButton, blueButton);
-        buttonBox.setPadding(new Insets(10));
+        // Team selection buttons
+        HBox buttonBox = new HBox(20);
+        buttonBox.setAlignment(Pos.CENTER);
 
-        VBox root = new VBox(10, nameLabel, nameField, countLabel, buttonBox);
-        root.setPadding(new Insets(10));
-
-        // Create scene
-        Scene scene = new Scene(root, 300, 200);
-        stage.setTitle("Select Team");
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.show();
-    }
-
-    /**
-     * Create the red team button
-     */
-    private Button createRedTeamButton() {
-        Button redButton = new Button("Join red team");
-        redButton.setStyle("-fx-font-size: 14px; -fx-background-color: #ff5555; -fx-text-fill: white;");
+        redButton = new Button("JOIN RED TEAM");
+        redButton.setPrefWidth(150);
+        redButton.setPrefHeight(50);
+        redButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #e74c3c; " +
+                "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);");
+        redButton.setOnMouseEntered(e -> redButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #c0392b; " +
+                "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 8);"));
+        redButton.setOnMouseExited(e -> redButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #e74c3c; " +
+                "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
         redButton.setOnAction(e -> {
             String playerName = nameField.getText().trim();
             if (!playerName.isEmpty()) {
@@ -149,9 +181,107 @@ public class Console extends Application {
                 player.setTeam("red");
             } else {
                 System.out.println("Name cannot be empty");
+
+                // Show error indication
+                nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2px;");
+
+                // Reset after short delay
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.seconds(1.5), evt -> {
+                            nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
+                        })
+                );
+                timeline.play();
             }
         });
-        return redButton;
+
+        blueButton = new Button("JOIN BLUE TEAM");
+        blueButton.setPrefWidth(150);
+        blueButton.setPrefHeight(50);
+        blueButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #3498db; " +
+                "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);");
+        blueButton.setOnMouseEntered(e -> blueButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #2980b9; " +
+                "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 8);"));
+        blueButton.setOnMouseExited(e -> blueButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #3498db; " +
+                "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
+        blueButton.setOnAction(e -> {
+            String playerName = nameField.getText().trim();
+            if (!playerName.isEmpty()) {
+                // Disable buttons to prevent multiple submissions
+                redButton.setDisable(true);
+                blueButton.setDisable(true);
+
+                sendToServer("teamSelection blue " + playerName);
+
+                // Create player
+                player = new Player("blue", 0, 0, playerName);
+                player.setName(playerName);
+                player.setTeam("blue");
+            } else {
+                System.out.println("Name cannot be empty");
+
+                // Show error indication
+                nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2px;");
+
+                // Reset after short delay
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.seconds(1.5), evt -> {
+                            nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
+                        })
+                );
+                timeline.play();
+            }
+        });
+
+        buttonBox.getChildren().addAll(redButton, blueButton);
+
+        // Game Instructions
+        VBox instructionsBox = new VBox(5);
+        instructionsBox.setAlignment(Pos.CENTER);
+        instructionsBox.setPadding(new Insets(15));
+        instructionsBox.setStyle("-fx-background-color: rgba(0,0,0,0.2); -fx-background-radius: 5;");
+        instructionsBox.setMaxWidth(400);
+
+        Label instructionsTitle = new Label("HOW TO PLAY");
+        instructionsTitle.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+        instructionsTitle.setTextFill(Color.WHITE);
+
+        Label instructionsText = new Label(
+                "• Capture flags by standing on them\n" +
+                        "• Use W, A, S, D keys to move\n" +
+                        "• First team to capture 2 flags wins"
+        );
+        instructionsText.setTextFill(Color.LIGHTGRAY);
+        instructionsText.setWrapText(true);
+
+        instructionsBox.getChildren().addAll(instructionsTitle, instructionsText);
+
+        // Waiting indicator (initially invisible)
+        HBox waitingBox = new HBox(10);
+        waitingBox.setAlignment(Pos.CENTER);
+        waitingBox.setPadding(new Insets(10));
+        waitingBox.setStyle("-fx-background-color: rgba(52, 152, 219, 0.3); -fx-background-radius: 5;");
+        waitingBox.setVisible(false);
+
+        ProgressIndicator waitingIndicator = new ProgressIndicator();
+        waitingIndicator.setPrefSize(24, 24);
+        waitingIndicator.setStyle("-fx-progress-color: white;");
+
+        Label waitingLabel = new Label("Waiting for players...");
+        waitingLabel.setTextFill(Color.WHITE);
+
+        waitingBox.getChildren().addAll(waitingIndicator, waitingLabel);
+
+        // Add all elements to root
+        root.getChildren().addAll(titleLabel, counterBox, nameSection, buttonBox, instructionsBox, waitingBox);
+
+        // Create scene with improved styling
+        Scene scene = new Scene(root, 480, 500);
+        stage.setTitle("Capture The Flag - Join Game");
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.centerOnScreen();
+        stage.show();
     }
 
     /**

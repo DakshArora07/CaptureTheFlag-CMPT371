@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * This class is responsible for starting the server and handling the clients.
+ * this class is responsible for starting the server and handling the clients.
  */
 public class Server {
 
@@ -49,7 +49,7 @@ public class Server {
     }
 
     /**
-     * Starts the server and listens for client connections
+     * starts the server and listens for client connections
      */
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -70,7 +70,7 @@ public class Server {
     }
 
     /**
-     * Broadcasts a message to all connected clients
+     * broadcasts a message to all connected clients
      */
     private void broadcast(String message) {
         System.out.println("Broadcasting: " + message);
@@ -85,7 +85,9 @@ public class Server {
     }
 
     /**
-     * Checks if the game should start based on player count
+     * checks if the game should start based on player count
+     * if the mminimum number of players is reached then the
+     * broadcast message is sent to all the players
      */
     private void checkGameStart() {
         if (!gameStarted && clientCount >= MIN_PLAYERS) {
@@ -101,13 +103,15 @@ public class Server {
     }
 
     /**
-     * Checks if a move has resulted in capturing a flag
+     * checks if a move has resulted in capturing a flag
+     * checks if the players are in the same coordinates as the flag
+     * if it is true then the broadcast message is sent to all the players to lock the flag
+     * the red flag count and the blue flag count is also increased
      */
     private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
         if (flag1 != null && flag1.getX() == x && flag1.getY() == y && !flag1.isCaptured()) {
             flag1.setCaptured(true);
 
-            // Find the player to determine team
             Player player = findPlayerByName(name);
             if (player != null) {
                 if (player.getTeam().equals("red")) {
@@ -158,7 +162,7 @@ public class Server {
     }
 
     /**
-     * Find a player by their name
+     * find a player by their name
      */
     private Player findPlayerByName(String name) {
         for (Player player : PLAYERS) {
@@ -170,7 +174,7 @@ public class Server {
     }
 
     /**
-     * Check if a team has won
+     * check if a team has won
      */
     private void checkWinCondition() {
         if (redFlagCount >= 2) {
@@ -181,7 +185,8 @@ public class Server {
     }
 
     /**
-     * This class handles communication with a single client
+     * this class handles communication with a single client
+     * implemented as a Runnable to allow for multi-threading
      */
     private class ClientHandler implements Runnable {
         private Socket socket;
@@ -201,14 +206,17 @@ public class Server {
         }
 
         /**
-         * Sends a message to this client
+         * sends a message to this client
          */
         public void sendMessage(String message) {
             if (out != null) {
                 out.println(message);
             }
         }
-
+        /**
+         * handles incoming messages from the client
+         * new and improved switch case statement to handle different message types from the server
+         */
         @Override
         public void run() {
             try {
@@ -241,7 +249,7 @@ public class Server {
                             handleGameOver(parts);
                             break;
                         default:
-                            System.out.println("Unknown message type: " + messageType);
+                            System.out.println("i dont know what you mean. when you wanna say less but you wanna say no" + messageType);
                             break;
                     }
                 }
@@ -253,31 +261,26 @@ public class Server {
         }
 
         /**
-         * Handle team selection message
+         * handle team selection message
+         * place the red team players in left side and blue team players in the right side
          */
         private void handleTeamSelection(String[] parts) {
-            // Format: teamSelection <team> <playerName>
             if (parts.length >= 3) {
                 String team = parts[1];
                 String playerName = parts[2];
                 this.playerName = playerName;
 
-                // Determine spawn position based on team
                 int x, y;
                 if (team.equals("red")) {
-                    // Red team spawns on the left
                     x = random.nextInt(5) + 1;
                     y = 0;
                 } else {
-                    // Blue team spawns on the right
                     x = random.nextInt(5) + 1;
                     y = 19;
                 }
 
-                // Create player object
                 Player player = new Player(team, x, y, playerName);
 
-                // Check if player already exists
                 boolean playerExists = false;
                 for (Player p : PLAYERS) {
                     if (p.getName().equals(playerName)) {
@@ -291,39 +294,36 @@ public class Server {
                     clientCount++;
                 }
 
-                // Send player data back to all clients
                 broadcast("sendingPlayer " + player.getName() + " " + player.getTeam() + " " + player.getX() + " " + player.getY());
                 broadcast("updateCount " + clientCount);
 
-                // Check if we should start the game
                 checkGameStart();
             }
         }
 
         /**
-         * Handle move player message
+         * handle move player message
+         * first we update the location of the player and then we check if the player has captured a flag
+         * if then we broadcast the lock flag message to all the players
          */
         private void handleMovePlayer(String[] parts) {
-            // Format: movePlayer <n> <x> <y>
+
             if (parts.length >= 4) {
                 String playerName = parts[1];
                 int x = Integer.parseInt(parts[2]);
                 int y = Integer.parseInt(parts[3]);
 
-                // Update player position
                 updatePlayerPosition(playerName, x, y);
 
-                // Check for flag capture
                 checkIfPlayerCapturedFlag(playerName, x, y);
 
-                // Reconstruct and broadcast the move message to all clients
                 String moveMessage = "movePlayer " + playerName + " " + x + " " + y;
                 broadcast(moveMessage);
             }
         }
 
         /**
-         * Update player position in the server's state
+         * update player position in the server's state
          */
         private void updatePlayerPosition(String name, int x, int y) {
             for (Player player : PLAYERS) {
@@ -336,34 +336,36 @@ public class Server {
         }
 
         /**
-         * Handle request for current player count
+         * handle request for current player count
+         * only used to get the size of the players and to set the number of players label in the UI
          */
         private void handleCurrentPlayers() {
             sendMessage("sizeOfPlayersIs " + PLAYERS.size());
         }
 
         /**
-         * Handle exit game message
+         * handle exit game message
          */
         private void handleExitGame(String[] parts) {
-            // Format: exitGame <playerName>
             if (parts.length >= 2) {
                 String name = parts[1];
 
                 // Remove player from list
                 PLAYERS.removeIf(p -> p.getName().equals(name));
 
-                // Decrement client count
                 clientCount--;
+                if(clientCount < 0){
+                    System.err.println("Client count is negative. Something went wrong.");
+                    return;
+                }
 
-                // Notify all clients
                 broadcast("playerLeft " + name);
                 broadcast("sizeOfPlayersIs " + PLAYERS.size());
             }
         }
 
         /**
-         * Handle flag coordinates message
+         * handle flag coordinates message
          */
         private void handleFlagCoordinates(String[] parts) {
             // Format: flagCoordinates <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
@@ -381,20 +383,18 @@ public class Server {
         }
 
         /**
-         * Handle resend players request
+         * handle resend players request
+         * used to get the resend the players in case of an error to get the location of the players
          */
         private void handleResendPlayers() {
             System.out.println("Resending all players to client");
 
-            // Send current player count
             sendMessage("sizeOfPlayersIs " + PLAYERS.size());
 
-            // Send all players
             for (Player player : PLAYERS) {
                 sendMessage("sendingPlayer " + player.getName() + " " + player.getTeam() + " " + player.getX() + " " + player.getY());
             }
 
-            // Also resend flag status if any are captured
             if (flag1 != null && flag1.isCaptured()) {
                 sendMessage("lockFlag " + flag1.getName());
             }
@@ -407,7 +407,8 @@ public class Server {
         }
 
         /**
-         * Handle game over message
+         * handle game over message
+         * also opens the results window to show the team that won
          */
         private void handleGameOver(String[] parts) {
             String winner = parts.length > 1 ? parts[1] : "";
@@ -426,7 +427,7 @@ public class Server {
         }
 
         /**
-         * Handle client disconnection
+         * handle client disconnection
          */
         private void handleDisconnect() {
             try {
@@ -452,9 +453,6 @@ public class Server {
         }
     }
 
-    /**
-     * Main method to start the server
-     */
     public static void main(String[] args) {
         Server server = new Server();
         server.start();
