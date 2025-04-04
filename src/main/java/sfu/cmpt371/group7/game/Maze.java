@@ -134,6 +134,7 @@ public class Maze extends Application {
     public void start(Stage stage) throws IOException {
         System.out.println("Starting JavaFX application...");
         connectToServer();
+        out.println("resendPlayers");
         getNumberOfPlayers();
         assert(localPlayer != null);
         sendFlagCoordinates();
@@ -644,24 +645,23 @@ public class Maze extends Application {
             int x = Integer.parseInt(parts[3]);
             int y = Integer.parseInt(parts[4]);
 
-            Platform.runLater(() -> {
-                // Check if this is our local player
-                if (playerName.equals(localPlayer.getName())) {
-                    movePlayer(localPlayer, x, y);
-                    return;
-                }
+            // Skip if it's our own player (we already show ourselves)
+            if (playerName.equals(localPlayer.getName())) {
+                return;
+            }
 
-                // Check if player already exists
-                Player existingPlayer = findPlayerByName(playerName);
+            // Find or create player
+            Player existingPlayer = findPlayerByName(playerName);
 
-                if (existingPlayer != null) {
-                    // Update existing player
-                    movePlayer(existingPlayer, x, y);
-                } else {
-                    // Add new player
-                    addPlayerToUI(playerName, team, x, y);
-                }
-            });
+            if (existingPlayer != null) {
+                // Update existing player
+                System.out.println("Updating existing player: " + playerName);
+                Platform.runLater(() -> movePlayer(existingPlayer, x, y));
+            } else {
+                // Add new player
+                System.out.println("Adding new player: " + playerName);
+                Platform.runLater(() -> addPlayerToUI(playerName, team, x, y));
+            }
         }
     }
 
