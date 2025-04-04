@@ -1,63 +1,88 @@
 package sfu.cmpt371.group7.game.ui;
 
-import javafx.animation.FadeTransition;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
-/*
- * this class is responsible for displaying the results of the game to the user.
- * the winning team will be displayed on the screen. along with the players name.
+/**
+ * This class displays the results of the game.
  */
 public class Results {
-    private final Stage stage;
-    private final String winningTeam;
+    private Stage stage;
+    private String winningTeam;
 
     public Results(Stage stage, String winningTeam) {
         this.stage = stage;
         this.winningTeam = winningTeam;
     }
 
+    /**
+     * Show the results window
+     */
     public void showResults() {
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #333333;");
+        // Create title label
+        Label titleLabel = new Label("Game Over");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
 
-        Text titleText = new Text("GAME OVER");
-        titleText.setFont(Font.font("Arial", FontWeight.BOLD, 48));
-        titleText.setFill(Color.WHITE);
+        // Create winner label
+        Label winnerLabel = new Label(getWinnerText());
+        winnerLabel.setFont(Font.font("Arial", 18));
+        winnerLabel.setTextFill(getWinnerColor());
 
-        Text winnerText = new Text(winningTeam.toUpperCase() + " TEAM WINS!");
-        winnerText.setFont(Font.font("Arial", FontWeight.BOLD, 36));
-        winnerText.setFill(winningTeam.equalsIgnoreCase("red") ? Color.RED : Color.BLUE);
-
+        // Create exit button
         Button exitButton = new Button("Exit Game");
-        exitButton.setStyle("-fx-background-color: #555555; -fx-text-fill: white; -fx-font-size: 16px;");
-        exitButton.setPrefWidth(150);
-        exitButton.setPrefHeight(40);
+        exitButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
         exitButton.setOnAction(e -> System.exit(0));
 
-        VBox centerBox = new VBox(30);
-        centerBox.setAlignment(Pos.CENTER);
-        centerBox.getChildren().addAll(titleText, winnerText, exitButton);
+        // Create layout
+        VBox layout = new VBox(15);
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(20));
+        layout.getChildren().addAll(titleLabel, winnerLabel, exitButton);
 
-        root.setCenter(centerBox);
+        // Create scene
+        Scene scene = new Scene(layout, 300, 200);
 
-        Scene scene = new Scene(root, 800, 800);
-        stage.setScene(scene);
+        // Configure stage
+        stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Game Results");
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.centerOnScreen();
+        stage.show();
+    }
 
-        FadeTransition fadeIn = new FadeTransition(Duration.seconds(1.5), root);
-        root.setOpacity(0);
-        fadeIn.setFromValue(0);
-        fadeIn.setToValue(1);
-        fadeIn.play();
+    /**
+     * Get the text to display for the winner
+     */
+    private String getWinnerText() {
+        if (winningTeam == null || winningTeam.isEmpty() || winningTeam.equalsIgnoreCase("tie")) {
+            return "It's a tie!";
+        } else {
+            return winningTeam.toUpperCase() + " team wins!";
+        }
+    }
+
+    /**
+     * Get the color to use for the winner text
+     */
+    private Color getWinnerColor() {
+        if (winningTeam == null || winningTeam.isEmpty() || winningTeam.equalsIgnoreCase("tie")) {
+            return Color.BLACK;
+        } else if (winningTeam.equalsIgnoreCase("red")) {
+            return Color.RED;
+        } else if (winningTeam.equalsIgnoreCase("blue")) {
+            return Color.BLUE;
+        } else {
+            return Color.BLACK;
+        }
     }
 }

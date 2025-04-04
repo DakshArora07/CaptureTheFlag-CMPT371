@@ -1,13 +1,11 @@
 package sfu.cmpt371.group7.game;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -20,7 +18,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import sfu.cmpt371.group7.game.logistics.Flag;
 import sfu.cmpt371.group7.game.logistics.Player;
-import sfu.cmpt371.group7.game.ui.CaptureTimer;
 import sfu.cmpt371.group7.game.ui.Results;
 
 import java.io.BufferedReader;
@@ -30,16 +27,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-/*
-* this class is responsible for creating the maze and adding the players to the maze. ( MAZE = GRID)
-* the player can move in the grid using the W,A,S,D keys.
-* the player can exit the game using the exit button.
-* the player can see the total number of players in the game.
-* the player can see the time left to play the game.
-* the player can see the name of the player.
-* the player can see the flags in the maze.
+/**
+ * This class is responsible for creating the maze and handling player movement.
  */
 public class Maze extends Application {
 
@@ -68,27 +58,24 @@ public class Maze extends Application {
     private int blueFlagCount = 0;
     private Label flagCountLabel;
     private Label flagCaptureLabel;
-    private CaptureTimer captureTimer;
     private Flag flag1; // the right one
     private Flag flag2; // left
     private Flag flag3; // bottom
 
-    /*
-    * constructor to initialize the player and the grid.
-    * the grid is a 2D array of characters.
-    * the player is the object of the player class.
-    * the players is the list of all the players in the game. [ MIGHT NOT NEED IT. KEPT FOR NOW. TODO]
+    /**
+     * Constructor
      */
     public Maze(Player player) {
         localPlayer = player;
         grid = new char[rows][cols];
         players = new ArrayList<>();
+        players.add(localPlayer); // Add local player to the players list
         initGrid();
         System.out.println("player name is " + player.getName());
     }
 
-    /*
-    * this function is used to initialize the grid.
+    /**
+     * Initialize the grid with empty spaces
      */
     public void initGrid() {
         for (int i = 0; i < rows; i++) {
@@ -100,9 +87,8 @@ public class Maze extends Application {
         addFlags();
     }
 
-    /*
-    * this function is used to add the barriers in the maze.
-    * will change the barriers to make it slightly more complex.
+    /**
+     * Add barriers to create maze structure
      */
     public void addBarriers() {
         // Left-middle vertical barrier
@@ -122,12 +108,12 @@ public class Maze extends Application {
 
         // Add some small gaps to make barriers more interesting
         grid[7][5] = ' ';  // Gap in left barrier
-        grid[12][14] = ' '; // Gap in right barrier
-        grid[16][10] = ' '; // Gap in bottom barrier
+        grid[12][15] = ' '; // Gap in right barrier
+        grid[17][10] = ' '; // Gap in bottom barrier
     }
 
-    /*
-    * this function is used to add the flags in the maze.
+    /**
+     * Add flag positions
      */
     public void addFlags() {
         // Flag behind left barrier
@@ -144,39 +130,54 @@ public class Maze extends Application {
         flag3 = new Flag(18, 10, "flag3");
     }
 
-    /*
-    * this function is used to start the game.
-    * see below for connectToServer, getNumberOfPlayers, listenForServerMessages.
-    * all the barriers are black
-    * all the flags are yellow
-    * all the empty spaces are white
-    * the player is red or blue depending on the team
-     */
     @Override
     public void start(Stage stage) throws IOException {
         System.out.println("Starting JavaFX application...");
         connectToServer();
         getNumberOfPlayers();
         assert(localPlayer != null);
-        validatePlayerCount(players.size());
         sendFlagCoordinates();
         listenForServerMessages();
+
+        // Create UI components
+        createUI();
+
+        // Create scene with keyboard controls
+        Scene scene = new Scene(root, 800, 800);
+        setupKeyboardControls(scene);
+
+        // Configure and show the stage
+        stage.setTitle("Maze");
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    /**
+     * Create the user interface
+     */
+    private void createUI() {
         gridPane = new GridPane();
+        gridPane.setPadding(new Insets(5));
+        gridPane.setHgap(1);
+        gridPane.setVgap(1);
+
         root = new BorderPane();
+
         flagCountLabel = new Label("Red: " + redFlagCount + " Blue: " + blueFlagCount);
         flagCaptureLabel = new Label("No flags captured yet");
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
 
-
+        // Draw grid
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 Rectangle rect = new Rectangle(30, 30);
                 if (grid[i][j] == 'X') {
                     rect.setFill(Color.BLACK);
-                }
-                else if(grid[i][j] == 'F') {
+                } else if(grid[i][j] == 'F') {
                     rect.setFill(Color.YELLOW);
-                }else {
+                } else {
                     rect.setFill(Color.WHITE);
                 }
                 rect.setStroke(Color.GRAY);
@@ -184,24 +185,20 @@ public class Maze extends Application {
             }
         }
 
-        // add a new timer for the player
+        // Create timer
         timerLabel = new Label("Time left:  3:00");
         timerLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dd3333; -fx-font-weight: bold;");
         startTimer();
 
+        // Create exit button
         Button exitButton = new Button("Exit");
         exitButton.setStyle("-fx-background-color: #ff0000; -fx-text-fill: white;");
         exitButton.setOnAction(e -> {
-            // exit the game and reduce the count and also remove the player from the all the other persons game.
-            // need to use a token to remove the player.
-            // server can send message to all the clients to remove the player.
-            // a corresponding fxn will be executed in the maze class
             out.println("exitGame " + localPlayer.getName());
             System.exit(0);
         });
 
-
-        // Side panel
+        // Create side panel
         VBox sidePanel = new VBox(10);
         sidePanel.setPadding(new Insets(10));
         sidePanel.setStyle("-fx-background-color: linear-gradient(to bottom, #eeeeee, #cccccc); "
@@ -212,42 +209,28 @@ public class Maze extends Application {
         name.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
         sidePanel.getChildren().addAll(statusLabel, name, exitButton, flagCountLabel, flagCaptureLabel);
 
+        // Create top panel with timer
         BorderPane topPane = new BorderPane();
         topPane.setLeft(new Label(" "));
         topPane.setCenter(timerLabel);
         topPane.setRight(new Label(" "));
         topPane.setPadding(new Insets(10, 0, 10, 0));
 
-        captureTimer = new CaptureTimer();
-
+        // Assemble main layout
         root.setTop(topPane);
         root.setRight(sidePanel);
         root.setCenter(gridPane);
-        root.setBottom(captureTimer);
-        root.setPadding(new Insets(0, 0, 30, 0));
-        captureTimer.start();
 
-        Scene scene = new Scene(root, 800, 800);
-        stage.setTitle("Maze");
-        stage.setScene(scene);
-        stage.setResizable(true);
-        stage.centerOnScreen();
-        stage.show();
+        // Add the local player to the grid
+        if (localPlayer != null) {
+            addPlayerToUI(localPlayer.getName(), localPlayer.getTeam(), localPlayer.getX(), localPlayer.getY());
+        }
+    }
 
-        // Fade transition on startup
-        FadeTransition fadeIn = new FadeTransition(Duration.seconds(1.5), root);
-        root.setOpacity(0);
-        fadeIn.setFromValue(0);
-        fadeIn.setToValue(1);
-        fadeIn.play();
-
-        /*
-        * event handler for the key pressed.
-        * based on what key is pressed, first the move is validated. valid move is a move that does not go out of the grid,
-        * does not go into any barrier or any other person. at the moment also does not go into the flags.
-        * the new position of the player is then broadcasted to all the other players so they can update the location.
-        * this ensures that all players can see the movement of the player in real time
-         */
+    /**
+     * Set up keyboard controls for player movement
+     */
+    private void setupKeyboardControls(Scene scene) {
         scene.setOnKeyPressed(event -> {
             if (localPlayer != null) {
                 int newX = localPlayer.getX();
@@ -280,28 +263,78 @@ public class Maze extends Application {
                     localPlayer.setX(newX);
                     localPlayer.setY(newY);
                     out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
+
+                    // Also move the player locally to make the UI more responsive
+                    movePlayer(localPlayer, newX, newY);
+
+                    // Check if player reached a flag
+                    checkForFlagCapture(localPlayer, newX, newY);
                 }
             }
         });
-
     }
 
-    /*
-    * this function is used to start the timer.
-    * the timer is set to 3 minutes.
-    * NOT WORKING AT THE MOMENT. NEED TO FIX IT.
+    /**
+     * Check if player is on a flag position
      */
+    private void checkForFlagCapture(Player player, int x, int y) {
+        // Check if player is on a flag position
+        if (flag1 != null && x == flag1.getX() && y == flag1.getY() && !flag1.isCaptured()) {
+            captureFlag(player, flag1);
+        } else if (flag2 != null && x == flag2.getX() && y == flag2.getY() && !flag2.isCaptured()) {
+            captureFlag(player, flag2);
+        } else if (flag3 != null && x == flag3.getX() && y == flag3.getY() && !flag3.isCaptured()) {
+            captureFlag(player, flag3);
+        }
+    }
 
-    /*
-     * This function initializes and starts a 3-minute countdown timer.
-     * It sets the initial timer display and updates it every second.
+    /**
+     * Handle flag capture by a player
+     */
+    private void captureFlag(Player player, Flag flag) {
+        // Update flag state
+        flag.setCaptured(true);
+
+        // Update flag count
+        if (player.getTeam().equals("red")) {
+            redFlagCount++;
+        } else {
+            blueFlagCount++;
+        }
+
+        // Update UI
+        Platform.runLater(() -> {
+            flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
+            flagCaptureLabel.setText(player.getName() + " captured " + flag.getName());
+        });
+
+        // Check win condition
+        if (redFlagCount >= 2) {
+            endGame("red");
+        } else if (blueFlagCount >= 2) {
+            endGame("blue");
+        }
+    }
+
+    /**
+     * End the game and show results
+     */
+    private void endGame(String winner) {
+        Platform.runLater(() -> {
+            Stage resultStage = new Stage();
+            Results results = new Results(resultStage, winner);
+            results.showResults();
+        });
+    }
+
+    /**
+     * Start the game timer
      */
     private void startTimer() {
         final int totalTime = 180; // 3 minutes in seconds
+        final Timeline[] timelineRef = new Timeline[1];
 
         timerLabel.setText(String.format("Time left: %d:%02d", totalTime / 60, totalTime % 60));
-
-        final Timeline[] timelineRef = new Timeline[1];
 
         // Create the timeline with access to the reference
         timelineRef[0] = new Timeline(
@@ -333,56 +366,65 @@ public class Maze extends Application {
         timelineRef[0].play();
     }
 
-    /*
-    * this function is used to check if the move is valid.
-    * returns true or false
+    /**
+     * Check if a move is valid
      */
-
     private boolean checkValidMove(int newX, int newY) {
-        return newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X' && !players.stream().anyMatch(p -> p.getX() == newX && p.getY() == newY);
+        // Check grid boundaries
+        if (newX < 0 || newX >= rows || newY < 0 || newY >= cols) {
+            return false;
+        }
+
+        // Check if cell is a barrier
+        if (grid[newX][newY] == 'X') {
+            return false;
+        }
+
+        // Check if cell is occupied by another player
+        for (Player p : players) {
+            if (p != localPlayer && p.getX() == newX && p.getY() == newY) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    /*
-    * this function is used to move the player.
-    * first the player is removed from the old position.
-    * then the player is added to the new position.
-    * the player is red or blue depending on the team.
-    * the player is a rectangle with the name of the player.
-    * the player is added to the gridpane.
-    * the args come from listenForServerMessages.
+    /**
+     * Move a player on the grid
      */
     private void movePlayer(Player player, int newX, int newY) {
-        // Check if move is valid (not into barrier)
-        if (newX >= 0 && newX < rows && newY >= 0 && newY < cols && grid[newX][newY] != 'X') {
-            Platform.runLater(() -> {
-                // Remove player from old position first
-                // We need to find the StackPane that contains the player
-                gridPane.getChildren().removeIf(node ->
-                        GridPane.getColumnIndex(node) == player.getY() &&
-                                GridPane.getRowIndex(node) == player.getX() &&
-                                node instanceof StackPane);
+        Platform.runLater(() -> {
+            // Remove all instances of this player from the grid
+            gridPane.getChildren().removeIf(node ->
+                    node instanceof StackPane &&
+                            ((StackPane)node).getChildren().stream()
+                                    .anyMatch(child ->
+                                            child instanceof Text &&
+                                                    ((Text)child).getText().equals(player.getName())));
 
-                // Update player position
-                player.setX(newX);
-                player.setY(newY);
+            // Update player position
+            player.setX(newX);
+            player.setY(newY);
 
-                // Add player at new position
-                Rectangle rect = new Rectangle(30, 30);
-                rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
-                rect.setStroke(Color.GRAY);
+            // Create player representation
+            Rectangle rect = new Rectangle(30, 30);
+            rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
+            rect.setStroke(Color.GRAY);
 
-                Text textNode = new Text(player.getName());
-                textNode.setFill(Color.WHITE);
+            Text textNode = new Text(player.getName());
+            textNode.setFill(Color.WHITE);
 
-                // Stack them together
-                StackPane pane = new StackPane(rect, textNode);
-                gridPane.add(pane, newY, newX);
-            });
-        }
+            // Stack them together
+            StackPane pane = new StackPane(rect, textNode);
+
+            // Add to grid at new position
+            gridPane.add(pane, newY, newX);
+        });
     }
 
-    /*
-    * this function is used to connect to the server.
+    /**
+     * Connect to the server
      */
     private void connectToServer() throws IOException {
         socket = new Socket(ADDRESS, PORT);
@@ -390,41 +432,17 @@ public class Maze extends Application {
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    /*
-    * NOT BEING USED AT THE MOMENT.
-     */
-    private void addPlayer() {
-        String team = localPlayer.getTeam();
-        int x = team.equals("red") ? new Random().nextInt(rows) : new Random().nextInt(rows);
-        int y = team.equals("red") ? new Random().nextInt(cols / 2) : (cols / 2) + new Random().nextInt(cols / 2);
-
-        Platform.runLater(() -> addPlayerToUI(localPlayer.getName(), team, x, y));
-
-
-    }
-    /*
-    * send the current coordinates of the flags to the server.
+    /**
+     * Send flag coordinates to the server
      */
     private void sendFlagCoordinates(){
-        grid[8][7] = 'F';
-
-        // Flag behind right barrier
-        grid[10][13] = 'F';
-
-        // Flag below bottom barrier
-        grid[18][10] = 'F';
-
-        out.println("flagCoordinates " + flag1.getX() + " " + flag1.getY() + " " + flag2.getX() + " " + flag2.getY() + " " + flag3.getX() + " " + flag3.getY());
+        out.println("flagCoordinates " + flag1.getX() + " " + flag1.getY() + " " +
+                flag2.getX() + " " + flag2.getY() + " " +
+                flag3.getX() + " " + flag3.getY());
     }
 
-
-    /*
-    * this function is used to get listen for various messages from the server.
-    * the messages are movePlayer, newPlayer, sizeOfPlayersIs.
-    * movePlayer -> the player has moved. the new position of the player is sent to all the other players.
-    * newPlayer -> a new player has joined the game. the new player is added to the grid.
-    * sizeOfPlayersIs -> the total number of players in the game is received from the server.
-    * used to update the total number of players in the game.
+    /**
+     * Listen for server messages
      */
     private void listenForServerMessages() {
         new Thread(() -> {
@@ -432,109 +450,34 @@ public class Maze extends Application {
                 String message;
                 while ((message = in.readLine()) != null) {
                     String[] parts = message.split(" ");
-                     if(parts[0].equals("movePlayer")) {
-                         String name = parts[1];
-                         int newX = Integer.parseInt(parts[2]);
-                         int newY = Integer.parseInt(parts[3]);
-                         Platform.runLater(() -> { // ensures that the movePlayer call is executed safely on the JavaFX thread
-                             Player player = players.stream()
-                                     .filter(p -> p.getName().equals(name) &&
-                                             (localPlayer == null || !p.equals(localPlayer)))
-                                     .findFirst()
-                                     .orElse(null);
-                             if (player != null) {
-                                 movePlayer(player, newX, newY);
-                             } else if (localPlayer != null && localPlayer.getName().equals(name)) {
-                                 movePlayer(localPlayer, newX, newY);
-                             }
-                         });
-                     }
-                     else if(parts[0].equals("newPlayer")){
-                         System.out.println("HEREEEEEEEEE");
-                            String team = parts[1];
-                            int x = Integer.parseInt(parts[2]);
-                            int y = Integer.parseInt(parts[3]);
-                            String name = parts[4];
-                            Platform.runLater(() -> addPlayerToUI(name, team, x, y));
-                        }
+                    String messageType = parts[0];
 
-                     else if(parts[0].equals("sizeOfPlayersIs")){
-                         int playerCount = Integer.parseInt(parts[1]);
-                            Platform.runLater(() -> statusLabel.setText("Players: " + playerCount));
-                     }
+                    System.out.println("Received: " + message);
 
-                     else if(parts[0].equals("gameOver")){
-                         // we would have the info of the winning team here.
-                         // open the who won stage to show who won the game
-                            Platform.runLater(() ->{
-                                Results results = new Results(new Stage(), "<the winning team>");
-                                results.showResults();
-                            });
-                     }
-
-                     else if(parts[0].equals("flagCaptured")){
-                         String playerName = parts[1];
-                         String flagName = parts[2];
-                         Platform.runLater(() ->{
-                             flagCaptureLabel.setText("player " + playerName + " has captured " + flagName);
-                         });
-                     }
-
-                     else if(parts[0].equals("lockFlag")){
-                         String flagName = parts[1];
-                         if(flag1.getName().equals(flagName)){
-                             flag1.setCaptured(true);
-                         }
-                         else if(flag2.getName().equals(flagName)){
-                             flag2.setCaptured(true);
-                         }
-                         else if(flag3.getName().equals(flagName)){
-                             flag3.setCaptured(true);
-                         }
-                     }
-
-                     else if(parts[0].equals("sendingPlayer")){
-                         // Format: sendingPlayer <name> <team> <x> <y>
-                         String playerName = parts[1];
-                         String team = parts[2];
-                         int x = Integer.parseInt(parts[3]);
-                         int y = Integer.parseInt(parts[4]);
-
-                         Platform.runLater(() -> {
-                             // Check if player already exists in our list
-                             Player existingPlayer = players.stream()
-                                     .filter(p -> p.getName().equals(playerName))
-                                     .findFirst()
-                                     .orElse(null);
-
-                             if (existingPlayer != null) {
-                                 // Remove existing player representation from UI
-                                 gridPane.getChildren().removeIf(node ->
-                                         GridPane.getColumnIndex(node) == existingPlayer.getY() &&
-                                                 GridPane.getRowIndex(node) == existingPlayer.getX() &&
-                                                 node instanceof StackPane);
-
-                                 // Update position
-                                 existingPlayer.setX(x);
-                                 existingPlayer.setY(y);
-
-                                 // Add player at new position
-                                 Rectangle rect = new Rectangle(30, 30);
-                                 rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
-                                 rect.setStroke(Color.GRAY);
-
-                                 Text textNode = new Text(playerName);
-                                 textNode.setFill(Color.WHITE);
-
-                                 // Stack them together
-                                 StackPane pane = new StackPane(rect, textNode);
-                                 gridPane.add(pane, y, x);
-                             } else {
-                                 // New player, add to UI
-                                 addPlayerToUI(playerName, team, x, y);
-                             }
-                         });
-                     }
+                    if (messageType.equals("movePlayer")) {
+                        handleMovePlayerMessage(parts);
+                    }
+                    else if (messageType.equals("newPlayer")) {
+                        handleNewPlayerMessage(parts);
+                    }
+                    else if (messageType.equals("sizeOfPlayersIs")) {
+                        handlePlayerCountMessage(parts);
+                    }
+                    else if (messageType.equals("gameOver")) {
+                        handleGameOverMessage(parts);
+                    }
+                    else if (messageType.equals("flagCaptured")) {
+                        handleFlagCapturedMessage(parts);
+                    }
+                    else if (messageType.equals("lockFlag")) {
+                        handleLockFlagMessage(parts);
+                    }
+                    else if (messageType.equals("sendingPlayer")) {
+                        handlePlayerUpdateMessage(parts);
+                    }
+                    else if (messageType.equals("playerLeft")) {
+                        handlePlayerLeftMessage(parts);
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -542,77 +485,222 @@ public class Maze extends Application {
         }).start();
     }
 
-    private void validatePlayerCount(int expectedCount) {
-        // Wait a bit for UI updates to complete
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-            // Count actual player rectangles in the grid
-            int actualCount = 0;
-            for (javafx.scene.Node node : gridPane.getChildren()) {
-                if (node instanceof StackPane) {
-                    StackPane stack = (StackPane) node;
-                    for (javafx.scene.Node child : stack.getChildren()) {
-                        if (child instanceof Rectangle) {
-                            Rectangle rect = (Rectangle) child;
-                            Color fill = (Color) rect.getFill();
-                            // Check if it's red or blue (a player)
-                            if (fill.equals(Color.RED) || fill.equals(Color.BLUE)) {
-                                actualCount++;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+    /**
+     * Handle new player message from server
+     */
+    private void handleNewPlayerMessage(String[] parts) {
+        // Format: newPlayer <team> <x> <y> <name>
+        if (parts.length >= 5) {
+            String team = parts[1];
+            int x = Integer.parseInt(parts[2]);
+            int y = Integer.parseInt(parts[3]);
+            String playerName = parts[4];
 
-            // If counts don't match, request resend
-            if (actualCount < expectedCount) {
-                System.out.println("Player count mismatch: Expected " + expectedCount +
-                        " but found " + actualCount + ". Requesting resend.");
-                out.println("resendPlayers");
-            }
-        }));
+            // Don't add if it's the local player or already exists
+            if (!playerName.equals(localPlayer.getName()) &&
+                    !playerExists(playerName)) {
 
-        timeline.play();
+                Platform.runLater(() -> addPlayerToUI(playerName, team, x, y));
+            }
+        }
     }
 
-    /*
-    * check if a move has result in the player capturing the flag.
-    * get the name of the player to show to the other players that x has captured
+    /**
+     * Check if a player already exists in our list
      */
+    private boolean playerExists(String name) {
+        for (Player p : players) {
+            if (p.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    /*
-    * this function is used to add the player to the UI.
-    * the player is a rectangle with the name of the player.
-    * the player is red or blue depending on the team.
+    /**
+     * Find a player by name
+     */
+    private Player findPlayerByName(String name) {
+        for (Player p : players) {
+            if (p.getName().equals(name)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Handle move player message from server
+     */
+    private void handleMovePlayerMessage(String[] parts) {
+        // Format: movePlayer <name> <x> <y>
+        if (parts.length >= 4) {
+            String playerName = parts[1];
+            int x = Integer.parseInt(parts[2]);
+            int y = Integer.parseInt(parts[3]);
+
+            // Find the player
+            Player player = findPlayerByName(playerName);
+
+            // If it's not our local player and we found them, move them
+            if (!playerName.equals(localPlayer.getName()) && player != null) {
+                movePlayer(player, x, y);
+            }
+        }
+    }
+
+    /**
+     * Handle player count message from server
+     */
+    private void handlePlayerCountMessage(String[] parts) {
+        if (parts.length >= 2) {
+            int count = Integer.parseInt(parts[1]);
+            Platform.runLater(() -> statusLabel.setText("Players: " + count));
+        }
+    }
+
+    /**
+     * Handle game over message from server
+     */
+    private void handleGameOverMessage(String[] parts) {
+        String winner = parts.length > 1 ? parts[1] : "unknown";
+        endGame(winner);
+    }
+
+    /**
+     * Handle flag captured message from server
+     */
+    private void handleFlagCapturedMessage(String[] parts) {
+        if (parts.length >= 3) {
+            String playerName = parts[1];
+            String flagName = parts[2];
+
+            Platform.runLater(() -> {
+                flagCaptureLabel.setText(playerName + " captured " + flagName);
+
+                // Update flag counts
+                Player capturingPlayer = findPlayerByName(playerName);
+                if (capturingPlayer != null) {
+                    if (capturingPlayer.getTeam().equals("red")) {
+                        redFlagCount++;
+                    } else {
+                        blueFlagCount++;
+                    }
+                    flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
+                }
+            });
+        }
+    }
+
+    /**
+     * Handle lock flag message from server
+     */
+    private void handleLockFlagMessage(String[] parts) {
+        if (parts.length >= 2) {
+            String flagName = parts[1];
+
+            if (flagName.equals(flag1.getName())) {
+                flag1.setCaptured(true);
+            } else if (flagName.equals(flag2.getName())) {
+                flag2.setCaptured(true);
+            } else if (flagName.equals(flag3.getName())) {
+                flag3.setCaptured(true);
+            }
+        }
+    }
+
+    /**
+     * Handle player update message from server
+     */
+    private void handlePlayerUpdateMessage(String[] parts) {
+        // Format: sendingPlayer <name> <team> <x> <y>
+        if (parts.length >= 5) {
+            String playerName = parts[1];
+            String team = parts[2];
+            int x = Integer.parseInt(parts[3]);
+            int y = Integer.parseInt(parts[4]);
+
+            Platform.runLater(() -> {
+                // Check if this is our local player
+                if (playerName.equals(localPlayer.getName())) {
+                    movePlayer(localPlayer, x, y);
+                    return;
+                }
+
+                // Check if player already exists
+                Player existingPlayer = findPlayerByName(playerName);
+
+                if (existingPlayer != null) {
+                    // Update existing player
+                    movePlayer(existingPlayer, x, y);
+                } else {
+                    // Add new player
+                    addPlayerToUI(playerName, team, x, y);
+                }
+            });
+        }
+    }
+
+    /**
+     * Handle player left message from server
+     */
+    private void handlePlayerLeftMessage(String[] parts) {
+        if (parts.length >= 2) {
+            String playerName = parts[1];
+
+            Platform.runLater(() -> {
+                // Remove player from UI
+                gridPane.getChildren().removeIf(node ->
+                        node instanceof StackPane &&
+                                ((StackPane)node).getChildren().stream()
+                                        .anyMatch(child ->
+                                                child instanceof Text &&
+                                                        ((Text)child).getText().equals(playerName)));
+
+                // Remove from players list
+                players.removeIf(p -> p.getName().equals(playerName));
+            });
+        }
+    }
+
+    /**
+     * Add a player to the UI
      */
     private void addPlayerToUI(String playerName, String team, int x, int y) {
-        Player player = new Player(team , x, y, playerName);
-        players.add(player);
-        if (localPlayer == null) {
-            localPlayer = player;
+        // Create new player object if it doesn't exist
+        Player player = findPlayerByName(playerName);
+        if (player == null) {
+            player = new Player(team, x, y, playerName);
+            players.add(player);
+        } else {
+            // Update existing player's position
+            player.setX(x);
+            player.setY(y);
         }
 
-        // Create a rectangle and text to display name
+        // Create visual representation
         Rectangle rect = new Rectangle(30, 30);
         rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
         rect.setStroke(Color.GRAY);
 
         Text textNode = new Text(playerName);
-        textNode.setFill(Color.BLACK);
+        textNode.setFill(Color.WHITE);
+
         // Stack them together
         StackPane pane = new StackPane(rect, textNode);
+
+        // Add to grid
         gridPane.add(pane, y, x);
     }
 
-    /*
-    * token to get the number of players in the game from the server
+    /**
+     * Request current player count from server
      */
     private void getNumberOfPlayers() {
         out.println("tellMeTheCurrentPlayers");
     }
 
     public static void main(String[] args) {
-        System.out.println("Starting Maze...");
-        launch();
+        launch(args);
     }
 }
