@@ -395,7 +395,7 @@ public class Maze extends Application {
      */
     private void movePlayer(Player player, int newX, int newY) {
         Platform.runLater(() -> {
-            // Remove all instances of this player from the grid
+            // Remove all instances of this player from the grid first
             gridPane.getChildren().removeIf(node ->
                     node instanceof StackPane &&
                             ((StackPane)node).getChildren().stream()
@@ -418,8 +418,10 @@ public class Maze extends Application {
             // Stack them together
             StackPane pane = new StackPane(rect, textNode);
 
-            // Add to grid at new position
+            // Add to the grid
             gridPane.add(pane, newY, newX);
+
+            System.out.println("Player " + player.getName() + " moved to " + newX + "," + newY);
         });
     }
 
@@ -533,18 +535,40 @@ public class Maze extends Application {
      * Handle move player message from server
      */
     private void handleMovePlayerMessage(String[] parts) {
-        // Format: movePlayer <name> <x> <y>
+        // Format: movePlayer <n> <x> <y>
         if (parts.length >= 4) {
             String playerName = parts[1];
-            int x = Integer.parseInt(parts[2]);
-            int y = Integer.parseInt(parts[3]);
+            int newX = Integer.parseInt(parts[2]);
+            int newY = Integer.parseInt(parts[3]);
 
-            // Find the player
-            Player player = findPlayerByName(playerName);
+            System.out.println("Processing move for player: " + playerName);
 
-            // If it's not our local player and we found them, move them
-            if (!playerName.equals(localPlayer.getName()) && player != null) {
-                movePlayer(player, x, y);
+            // Skip if it's our own movement (we already handled it locally)
+            if (playerName.equals(localPlayer.getName())) {
+                return;
+            }
+
+            // Find the player to move
+            Player playerToMove = findPlayerByName(playerName);
+
+            // If player doesn't exist yet, create them
+            if (playerToMove == null) {
+                System.out.println("Creating new player: " + playerName);
+                // Use opposite team as a fallback
+                String team = localPlayer.getTeam().equals("red") ? "blue" : "red";
+                playerToMove = new Player(team, newX, newY, playerName);
+                players.add(playerToMove);
+
+                Platform.runLater(() -> {
+                    addPlayerToUI(playerName, team, newX, newY);
+                });
+            } else {
+                // Move existing player
+                System.out.println("Moving existing player: " + playerName);
+                Player finalPlayerToMove = playerToMove;
+                Platform.runLater(() -> {
+                    movePlayer(finalPlayerToMove, newX, newY);
+                });
             }
         }
     }
