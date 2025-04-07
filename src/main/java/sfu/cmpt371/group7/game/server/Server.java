@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static java.lang.System.exit;
+
 /**
  * this class is responsible for starting the server and handling the clients.
  */
@@ -448,6 +450,8 @@ public class Server {
 
                 broadcast("playerLeft " + name);
                 broadcast("sizeOfPlayersIs " + PLAYERS.size());
+
+                endServer();
             }
         }
 
@@ -537,6 +541,13 @@ public class Server {
                 System.err.println("Error closing client connection: " + e.getMessage());
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void endServer(){
+        System.out.println("ending server");
+        if(clientCount == 0){
+            exit(0);
         }
     }
 

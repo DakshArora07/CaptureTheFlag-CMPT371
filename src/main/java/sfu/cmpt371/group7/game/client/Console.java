@@ -148,7 +148,7 @@ public class Console extends Application {
         VBox nameSection = new VBox(8);
         nameSection.setAlignment(Pos.CENTER);
 
-        Label nameLabel = new Label("ENTER YOUR NAME (EXACTLY 3 CHARACTERS)");
+        Label nameLabel = new Label("ENTER YOUR NAME (AT MOST 3 CHARACTERS)");
         nameLabel.setTextFill(Color.WHITE);
         nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
@@ -284,11 +284,11 @@ public class Console extends Application {
      * Validate player name (must be exactly 3 characters)
      */
     private boolean validatePlayerName(String name) {
-        if (name.length() != NAME_LENGTH) {
-            System.out.println("Name must be exactly " + NAME_LENGTH + " characters");
+        if (name.length() > NAME_LENGTH) {
+            System.out.println("Name can be at most 3 " + NAME_LENGTH + " characters");
 
             // Show error message
-            nameErrorLabel.setText("Name must be exactly " + NAME_LENGTH + " characters");
+            nameErrorLabel.setText("Name can be at most 3 " + NAME_LENGTH + " characters");
             nameErrorLabel.setVisible(true);
 
             // Visual indication of error
