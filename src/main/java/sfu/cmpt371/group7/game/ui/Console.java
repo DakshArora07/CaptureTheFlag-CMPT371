@@ -45,6 +45,7 @@ public class Console extends Application {
     private static final String ADDRESS = dotenv.get("ADDRESS");
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
+    private static final int NAME_LENGTH = 3; // Enforcing exactly 3 characters for name
 
 
     private static Label countLabel;
@@ -53,6 +54,7 @@ public class Console extends Application {
     private TextField nameField;
     private Button redButton;
     private Button blueButton;
+    private Label nameErrorLabel;
 
 
     private Socket socket;
@@ -146,17 +148,30 @@ public class Console extends Application {
         VBox nameSection = new VBox(8);
         nameSection.setAlignment(Pos.CENTER);
 
-        Label nameLabel = new Label("ENTER YOUR NAME");
+        Label nameLabel = new Label("ENTER YOUR NAME (EXACTLY 3 CHARACTERS)");
         nameLabel.setTextFill(Color.WHITE);
         nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
         nameField = new TextField();
-        nameField.setPromptText("Your player name");
+        nameField.setPromptText("3 Characters Only");
         nameField.setPrefHeight(40);
         nameField.setMaxWidth(300);
         nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
 
-        nameSection.getChildren().addAll(nameLabel, nameField);
+        // Add character limit to text field
+        nameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.length() > NAME_LENGTH) {
+                nameField.setText(oldValue);
+            }
+        });
+
+        // Add error label for name validation
+        nameErrorLabel = new Label("Name must be exactly 3 characters");
+        nameErrorLabel.setTextFill(Color.ORANGE);
+        nameErrorLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        nameErrorLabel.setVisible(false);
+
+        nameSection.getChildren().addAll(nameLabel, nameField, nameErrorLabel);
 
         // Team selection buttons
         HBox buttonBox = new HBox(20);
@@ -173,10 +188,11 @@ public class Console extends Application {
                 "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
         redButton.setOnAction(e -> {
             String playerName = nameField.getText().trim();
-            if (!playerName.isEmpty()) {
+            if (validatePlayerName(playerName)) {
                 // Disable buttons to prevent multiple submissions
                 redButton.setDisable(true);
                 blueButton.setDisable(true);
+                nameErrorLabel.setVisible(false);
 
                 sendToServer("teamSelection red " + playerName);
 
@@ -184,19 +200,6 @@ public class Console extends Application {
                 player = new Player("red", 0, 0, playerName);
                 player.setName(playerName);
                 player.setTeam("red");
-            } else {
-                System.out.println("Name cannot be empty");
-
-                // Show error indication
-                nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2px;");
-
-                // Reset after short delay
-                Timeline timeline = new Timeline(
-                        new KeyFrame(Duration.seconds(1.5), evt -> {
-                            nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
-                        })
-                );
-                timeline.play();
             }
         });
 
@@ -211,10 +214,11 @@ public class Console extends Application {
                 "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
         blueButton.setOnAction(e -> {
             String playerName = nameField.getText().trim();
-            if (!playerName.isEmpty()) {
+            if (validatePlayerName(playerName)) {
                 // Disable buttons to prevent multiple submissions
                 redButton.setDisable(true);
                 blueButton.setDisable(true);
+                nameErrorLabel.setVisible(false);
 
                 sendToServer("teamSelection blue " + playerName);
 
@@ -222,19 +226,6 @@ public class Console extends Application {
                 player = new Player("blue", 0, 0, playerName);
                 player.setName(playerName);
                 player.setTeam("blue");
-            } else {
-                System.out.println("Name cannot be empty");
-
-                // Show error indication
-                nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2px;");
-
-                // Reset after short delay
-                Timeline timeline = new Timeline(
-                        new KeyFrame(Duration.seconds(1.5), evt -> {
-                            nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
-                        })
-                );
-                timeline.play();
             }
         });
 
@@ -290,6 +281,33 @@ public class Console extends Application {
     }
 
     /**
+     * Validate player name (must be exactly 3 characters)
+     */
+    private boolean validatePlayerName(String name) {
+        if (name.length() != NAME_LENGTH) {
+            System.out.println("Name must be exactly " + NAME_LENGTH + " characters");
+
+            // Show error message
+            nameErrorLabel.setText("Name must be exactly " + NAME_LENGTH + " characters");
+            nameErrorLabel.setVisible(true);
+
+            // Visual indication of error
+            nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px; -fx-border-color: #e74c3c; -fx-border-width: 2px;");
+
+            // Reset styling after short delay
+            Timeline timeline = new Timeline(
+                    new KeyFrame(Duration.seconds(1.5), evt -> {
+                        nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
+                    })
+            );
+            timeline.play();
+
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Create the blue team button
      */
     private Button createBlueTeamButton() {
@@ -297,7 +315,7 @@ public class Console extends Application {
         blueButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5555ff; -fx-text-fill: white;");
         blueButton.setOnAction(e -> {
             String playerName = nameField.getText().trim();
-            if (!playerName.isEmpty()) {
+            if (validatePlayerName(playerName)) {
                 // Disable buttons to prevent multiple submissions
                 redButton.setDisable(true);
                 blueButton.setDisable(true);
@@ -308,8 +326,6 @@ public class Console extends Application {
                 player = new Player("blue", 0, 0, playerName);
                 player.setName(playerName);
                 player.setTeam("blue");
-            } else {
-                System.out.println("Name cannot be empty");
             }
         });
         return blueButton;
@@ -386,7 +402,7 @@ public class Console extends Application {
                 int newCount = Integer.parseInt(tokens[1]);
                 totalCount = newCount;
 
-                Platform.runLater(() -> countLabel.setText("Total count: " + totalCount));
+                Platform.runLater(() -> countLabel.setText(totalCount + " / " + MIN_PLAYERS));
             }
         } catch (Exception e) {
             System.err.println("Error parsing update count message: " + e.getMessage());
@@ -456,7 +472,6 @@ public class Console extends Application {
             );
             timeline.play();
         });
-
     }
 
     /**
