@@ -7,6 +7,7 @@ public class Player {
     private int y;
     private String name;
     private boolean capturedFlag;
+    private boolean capturingStatus;
 
     // this is causing problem. need to pass agrs for the x and y coordinates
 //    public Player(){
@@ -24,6 +25,7 @@ public class Player {
         this.y = y;
         this.name = name;
         this.capturedFlag = false;
+        this.capturingStatus = false;
     }
 
     public void setTeam(String team){
@@ -64,6 +66,14 @@ public class Player {
 
     public boolean getCapturedFlag(){
         return capturedFlag;
+    }
+
+    public void setCapturingStatus(boolean flag){
+        this.capturingStatus = flag;
+    }
+
+    public boolean getCapturingStatus(){
+        return capturingStatus;
     }
 
 }
