@@ -27,12 +27,12 @@ This repository implements a simple multiplayer Capture the Flag game written in
    ```
 4. **Start the server** by running the main class in `Server.java`:
    ```bash
-   mvn exec:java -Dexec.mainClass=sfu.cmpt371.group7.game.server.Server
+   mvn clean javafx:run
    ```
    It will listen for incoming client connections on the specified port.
 5. **Launch the client** by running the `Console` application:
    ```bash
-   mvn exec:java -Dexec.mainClass=sfu.cmpt371.group7.game.ui.Console
+   mvn clean javafx:run
    ```
    You will be prompted to create or join a team.
 

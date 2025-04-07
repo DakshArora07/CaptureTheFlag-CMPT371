@@ -15,7 +15,7 @@
         <javafx.version>22-ea+11</javafx.version>
         <maven.compiler.source>22</maven.compiler.source>
         <maven.compiler.target>22</maven.compiler.target>
-        <main.class>sfu.cmpt371.group7.game.ui.Console</main.class>
+        <main.class>sfu.cmpt371.group7.game.client.Console</main.class>
     </properties>
 
     <dependencies>
@@ -57,7 +57,6 @@
 
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -68,7 +67,6 @@
                 </configuration>
             </plugin>
 
-            <!-- JavaFX Maven Plugin -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -78,7 +76,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Shade Plugin to create executable JAR with dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -100,7 +97,6 @@
                 </executions>
             </plugin>
 
-            <!-- Optional: Maven JAR Plugin for additional configuration -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

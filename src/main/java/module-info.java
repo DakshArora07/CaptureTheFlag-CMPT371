@@ -7,8 +7,8 @@ module sfu.cmpt371.group7.game {
 
     opens sfu.cmpt371.group7.game to javafx.fxml;
     exports sfu.cmpt371.group7.game;
-    opens sfu.cmpt371.group7.game.ui to javafx.fxml;
-    exports sfu.cmpt371.group7.game.ui;
-    opens sfu.cmpt371.group7.game.logistics to javafx.fxml;
-    exports sfu.cmpt371.group7.game.logistics;
+    opens sfu.cmpt371.group7.game.client to javafx.fxml;
+    exports sfu.cmpt371.group7.game.client;
+    opens sfu.cmpt371.group7.game.model to javafx.fxml;
+    exports sfu.cmpt371.group7.game.model;
 }

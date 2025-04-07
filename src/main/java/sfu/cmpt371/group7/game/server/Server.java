@@ -1,8 +1,8 @@
 package sfu.cmpt371.group7.game.server;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import sfu.cmpt371.group7.game.logistics.Flag;
-import sfu.cmpt371.group7.game.logistics.Player;
+import sfu.cmpt371.group7.game.model.Flag;
+import sfu.cmpt371.group7.game.model.Player;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

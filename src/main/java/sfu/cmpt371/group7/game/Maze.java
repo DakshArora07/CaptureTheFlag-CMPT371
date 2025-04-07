@@ -16,9 +16,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import sfu.cmpt371.group7.game.logistics.Flag;
-import sfu.cmpt371.group7.game.logistics.Player;
-import sfu.cmpt371.group7.game.ui.Results;
+import sfu.cmpt371.group7.game.model.Flag;
+import sfu.cmpt371.group7.game.model.Player;
+import sfu.cmpt371.group7.game.client.Results;
 
 import java.io.BufferedReader;
 import java.io.IOException;
