@@ -266,56 +266,15 @@ public class Maze extends Application {
                     out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
 
                     // Also move the player locally to make the UI more responsive
-                    movePlayer(localPlayer, newX, newY);
+                    //smovePlayer(localPlayer, newX, newY);
 
                     // Check if player reached a flag
-                    checkForFlagCapture(localPlayer, newX, newY);
+                    //checkForFlagCapture(localPlayer, newX, newY);
                 }
             }
         });
     }
 
-    /**
-     * Check if player is on a flag position
-     */
-    private void checkForFlagCapture(Player player, int x, int y) {
-        // Check if player is on a flag position
-        if (flag1 != null && x == flag1.getX() && y == flag1.getY() && !flag1.isCaptured()) {
-            captureFlag(player, flag1);
-        } else if (flag2 != null && x == flag2.getX() && y == flag2.getY() && !flag2.isCaptured()) {
-            captureFlag(player, flag2);
-        } else if (flag3 != null && x == flag3.getX() && y == flag3.getY() && !flag3.isCaptured()) {
-            captureFlag(player, flag3);
-        }
-    }
-
-    /**
-     * Handle flag capture by a player
-     */
-    private void captureFlag(Player player, Flag flag) {
-        // Update flag state
-        flag.setCaptured(true);
-
-        // Update flag count
-        if (player.getTeam().equals("red")) {
-            redFlagCount++;
-        } else {
-            blueFlagCount++;
-        }
-
-        // Update UI
-        Platform.runLater(() -> {
-            flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
-            flagCaptureLabel.setText(player.getName() + " captured " + flag.getName());
-        });
-
-        // Check win condition
-        if (redFlagCount >= 2) {
-            endGame("red");
-        } else if (blueFlagCount >= 2) {
-            endGame("blue");
-        }
-    }
 
     /**
      * End the game and show results
@@ -470,7 +429,7 @@ public class Maze extends Application {
                         handleGameOverMessage(parts);
                     }
                     else if (messageType.equals("flagCaptured")) {
-                        //handleFlagCapturedMessage(parts);
+                        handleFlagCapturedMessage(parts);
                     }
                     else if (messageType.equals("lockFlag")) {
                         handleLockFlagMessage(parts);
@@ -536,7 +495,10 @@ public class Maze extends Application {
      * Handle move player message from server
      */
     private void handleMovePlayerMessage(String[] parts) {
+        // name x y
         // Format: movePlayer <n> <x> <y>
+
+
         if (parts.length >= 4) {
             String playerName = parts[1];
             int newX = Integer.parseInt(parts[2]);
@@ -545,12 +507,14 @@ public class Maze extends Application {
             System.out.println("Processing move for player: " + playerName);
 
             // Skip if it's our own movement (we already handled it locally)
-            if (playerName.equals(localPlayer.getName())) {
-                return;
-            }
+            //if (playerName.equals(localPlayer.getName())) {
+              //  return;
+            //}
 
             // Find the player to move
             Player playerToMove = findPlayerByName(playerName);
+
+
 
             // If player doesn't exist yet, create them
             if (playerToMove == null) {
@@ -563,7 +527,16 @@ public class Maze extends Application {
                 Platform.runLater(() -> {
                     addPlayerToUI(playerName, team, newX, newY);
                 });
-            } else {
+            }
+
+            else if(parts[1].equals(localPlayer.getName())){
+                System.out.println("--------------------------");
+                System.out.println("Moving existing player: " + playerName);
+                Player finalPlayerToMove = playerToMove;
+                Platform.runLater(() -> {
+                    movePlayer(finalPlayerToMove, newX, newY);
+                });
+            }else {
                 // Move existing player
                 System.out.println("Moving existing player: " + playerName);
                 Player finalPlayerToMove = playerToMove;
