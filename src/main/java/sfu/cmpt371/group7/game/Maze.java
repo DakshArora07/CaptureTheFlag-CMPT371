@@ -470,7 +470,7 @@ public class Maze extends Application {
                         handleGameOverMessage(parts);
                     }
                     else if (messageType.equals("flagCaptured")) {
-                        handleFlagCapturedMessage(parts);
+                        //handleFlagCapturedMessage(parts);
                     }
                     else if (messageType.equals("lockFlag")) {
                         handleLockFlagMessage(parts);
