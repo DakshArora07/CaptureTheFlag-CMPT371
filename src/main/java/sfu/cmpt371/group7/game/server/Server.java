@@ -1,6 +1,9 @@
 package sfu.cmpt371.group7.game.server;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import sfu.cmpt371.group7.game.logistics.Flag;
 import sfu.cmpt371.group7.game.logistics.Player;
 
@@ -10,7 +13,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.Duration;
+import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -182,55 +185,30 @@ public class Server {
 
 
         private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
-            if (flag1 != null && flag1.getX() == x && flag1.getY() == y && !flag1.isCaptured()) {
-                flag1.setCaptured(true);
 
-                Player player = findPlayerByName(name);
-                if (player != null) {
-                    if (player.getTeam().equals("red")) {
-                        redFlagCount++;
-                    } else {
-                        blueFlagCount++;
-                    }
+            Player player = findPlayerByName(name);
+            Flag flag = null;
+            if (flag1 != null && flag1.getX() == x && flag1.getY() == y && !flag1.isCaptured()){
+                flag = flag1;
+            } else if (flag2 != null && flag2.getX() == x && flag2.getY() == y) {
+                flag = flag2;
+            } else if (flag3 != null && flag3.getX() == x && flag3.getY() == y) {
+                flag = flag3;
+            }
+
+            if (player != null && flag != null) {
+                if (player.getTeam().equals("red")) {
+                    redFlagCount++;
+                } else {
+                    blueFlagCount++;
                 }
-
-                broadcast("flagCaptured " + name + " " + flag1.getName());
-                broadcast("lockFlag " + flag1.getName());
-                checkWinCondition();
-                return true;
-            } else if (flag2 != null && flag2.getX() == x && flag2.getY() == y && !flag2.isCaptured()) {
-                flag2.setCaptured(true);
-
-                Player player = findPlayerByName(name);
-                if (player != null) {
-                    if (player.getTeam().equals("red")) {
-                        redFlagCount++;
-                    } else {
-                        blueFlagCount++;
-                    }
-                }
-
-                broadcast("flagCaptured " + name + " " + flag2.getName());
-                broadcast("lockFlag " + flag2.getName());
-                checkWinCondition();
-                return true;
-            } else if (flag3 != null && flag3.getX() == x && flag3.getY() == y && !flag3.isCaptured()) {
-                flag3.setCaptured(true);
-
-                Player player = findPlayerByName(name);
-                if (player != null) {
-                    if (player.getTeam().equals("red")) {
-                        redFlagCount++;
-                    } else {
-                        blueFlagCount++;
-                    }
-                }
-
-                broadcast("flagCaptured " + name + " " + flag3.getName());
-                broadcast("lockFlag " + flag3.getName());
+                broadcast("flagCaptured " + name + " " + flag.getName());
+                broadcast("lockFlag " + flag.getName());
                 checkWinCondition();
                 return true;
             }
+
+
             return false;
         }
     /**
