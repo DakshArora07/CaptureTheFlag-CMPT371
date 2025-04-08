@@ -28,7 +28,7 @@ public class Server {
 
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
-    private final int NUM_FLAGS = 4;
+    private final int NUM_FLAGS = 7;
     private List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
