@@ -46,7 +46,6 @@ public class Console extends Application {
     private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
     private static final int NAME_LENGTH = 3; // Enforcing exactly 3 characters for name
 
-
     private static Label countLabel;
     private static Label newPlayerLabel;
     private static int totalCount = 0;
@@ -55,11 +54,9 @@ public class Console extends Application {
     private Button blueButton;
     private Label nameErrorLabel;
 
-
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-
 
     private Player player;
     private Stage primaryStage;

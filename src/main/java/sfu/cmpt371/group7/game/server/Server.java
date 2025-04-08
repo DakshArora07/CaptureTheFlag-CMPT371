@@ -26,20 +26,15 @@ public class Server {
             .filename("var.env")
             .load();
 
-    private static final int PORT_NUMBER = Integer.parseInt(dotenv.get("PORT_NUMBER"));
-    private static final int MIN_PLAYERS_REQUIRED = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
-
-    private static final int PORT = PORT_NUMBER;
-    private static final int MIN_PLAYERS = MIN_PLAYERS_REQUIRED;
-
+    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+    private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
+    private final int NUM_FLAGS = 4;
     private List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
     private final Random random = new Random();
     private final List<Player> PLAYERS = new ArrayList<>();
-    private Flag flag1; // the right one
-    private Flag flag2; // left
-    private Flag flag3; // bottom
+    private final List<Flag> flags = new ArrayList<>();
     private int redFlagCount = 0;
     private int blueFlagCount = 0;
 
@@ -74,7 +69,7 @@ public class Server {
     private void broadcast(String message) {
         System.out.println("Broadcasting: " + message);
 
-        synchronized(clients) {
+        synchronized (clients) {
             for (ClientHandler client : clients) {
                 if (client != null) {
                     client.sendMessage(message);
@@ -107,133 +102,29 @@ public class Server {
      * if it is true then the broadcast message is sent to all the players to lock the flag
      * the red flag count and the blue flag count is also increased
      */
-    //private boolean checkIfPlayerCapturedFlag(String name, int x, int y) throws InterruptedException {
 
-//        Player player = findPlayerByName(name);
-//        assert player != null;
-//
-//        Flag flag = null;
-//        if (flag1 != null && flag1.getX() == x && flag1.getY() == y && !flag1.isCaptured()){
-//            flag = flag1;
-//        } else if (flag2 != null && flag2.getX() == x && flag2.getY() == y && !flag2.isCaptured()) {
-//            flag = flag2;
-//        } else if (flag3 != null && flag3.getX() == x && flag3.getY() == y && !flag3.isCaptured()) {
-//            flag = flag3;
-//        }
-//
-//        if (flag != null) {
-//            player.setCapturingStatus(true);
-//            int timer = 10;
-//            broadcast("Timer started");
-//            while (timer > 0) {
-//                Thread.sleep(Duration.ofSeconds(1));
-//                if (flag.getX() != x || flag.getY() != y) {
-//                    broadcast("Player" + player.getName() + "moved");
-//                    broadcast("exit timer");
-//                    break;
-//                }
-//                timer --;
-//                broadcast("Time remaining: " + timer);
-//
-//            }
-//            if (timer == 0 && x == flag.getX() && y == flag.getY()) {
-//                player.setCapturingStatus(false);
-//                player.setCapturedFlag(true);
-//                flag.setCaptured(true);
-//                broadcast("flagCaptured " + name + " " + flag.getName());
-//                if (player.getTeam().equals("red")) {
-//                    redFlagCount++;
-//                } else {
-//                    blueFlagCount++;
-//                }
-//                checkWinCondition();
-//            }
-//        }
+    private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
 
+        Player player = findPlayerByName(name);
+        assert player != null;
 
-
-
-        /*if (flag1 != null && flag1.getX() == x && flag1.getY() == y && !flag1.isCaptured()) {
-            //flag1.setCaptured(true);
-
-            broadcast("flagCaptured " + name + " " + flag1.getName());
-            broadcast("lockFlag " + flag1.getName());
-            checkWinCondition();
-            return true;
-        } else if (flag2 != null && flag2.getX() == x && flag2.getY() == y && !flag2.isCaptured()) {
-            flag2.setCaptured(true);
-
-
-            broadcast("flagCaptured " + name + " " + flag2.getName());
-            broadcast("lockFlag " + flag2.getName());
-            checkWinCondition();
-            return true;
-        } else if (flag3 != null && flag3.getX() == x && flag3.getY() == y && !flag3.isCaptured()) {
-            flag3.setCaptured(true);
-
-            broadcast("flagCaptured " + name + " " + flag3.getName());
-            broadcast("lockFlag " + flag3.getName());
-            checkWinCondition();
-            return true;
-        }
-
-        return false;
-    }
-         */
-
-
-        private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
-            if (flag1 != null && flag1.getX() == x && flag1.getY() == y && !flag1.isCaptured()) {
-                flag1.setCaptured(true);
-
-                Player player = findPlayerByName(name);
-                if (player != null) {
-                    if (player.getTeam().equals("red")) {
-                        redFlagCount++;
-                    } else {
-                        blueFlagCount++;
-                    }
+        for (Flag flag : flags) {
+            if (flag != null && flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
+                flag.setCaptured(true);
+                broadcast("flagCaptured " + name + " " + flag.getName());
+                broadcast("lockFlag " + flag.getName());
+                if (player.getTeam().equals("red")) {
+                    redFlagCount++;
+                } else {
+                    blueFlagCount++;
                 }
-
-                broadcast("flagCaptured " + name + " " + flag1.getName());
-                broadcast("lockFlag " + flag1.getName());
-                checkWinCondition();
-                return true;
-            } else if (flag2 != null && flag2.getX() == x && flag2.getY() == y && !flag2.isCaptured()) {
-                flag2.setCaptured(true);
-
-                Player player = findPlayerByName(name);
-                if (player != null) {
-                    if (player.getTeam().equals("red")) {
-                        redFlagCount++;
-                    } else {
-                        blueFlagCount++;
-                    }
-                }
-
-                broadcast("flagCaptured " + name + " " + flag2.getName());
-                broadcast("lockFlag " + flag2.getName());
-                checkWinCondition();
-                return true;
-            } else if (flag3 != null && flag3.getX() == x && flag3.getY() == y && !flag3.isCaptured()) {
-                flag3.setCaptured(true);
-
-                Player player = findPlayerByName(name);
-                if (player != null) {
-                    if (player.getTeam().equals("red")) {
-                        redFlagCount++;
-                    } else {
-                        blueFlagCount++;
-                    }
-                }
-
-                broadcast("flagCaptured " + name + " " + flag3.getName());
-                broadcast("lockFlag " + flag3.getName());
                 checkWinCondition();
                 return true;
             }
-            return false;
         }
+        return false;
+    }
+
     /**
      * find a player by their name
      */
@@ -286,6 +177,7 @@ public class Server {
                 out.println(message);
             }
         }
+
         /**
          * handles incoming messages from the client
          * new and improved switch case statement to handle different message types from the server
@@ -376,10 +268,10 @@ public class Server {
         }
 
         /*
-        * send client has joined team color to all players
+         * send client has joined team color to all players
          */
         private void sendClientToAllPlayers(String message) {
-            for(ClientHandler client : clients) {
+            for (ClientHandler client : clients) {
                 if (client != null && !client.equals(this)) {
                     String team = message.split(" ")[1];
                     String playerName = message.split(" ")[2];
@@ -443,7 +335,7 @@ public class Server {
                 PLAYERS.removeIf(p -> p.getName().equals(name));
 
                 clientCount--;
-                if(clientCount < 0){
+                if (clientCount < 0) {
                     System.err.println("Client count is negative. Something went wrong.");
                     return;
                 }
@@ -460,11 +352,11 @@ public class Server {
          */
         private void handleFlagCoordinates(String[] parts) {
             //flagCoordinates <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
-            if (parts.length >= 7) {
+            if (parts.length >= NUM_FLAGS * 2 + 1) {
                 try {
-                    flag1 = new Flag(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), "flag1");
-                    flag2 = new Flag(Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), "flag2");
-                    flag3 = new Flag(Integer.parseInt(parts[5]), Integer.parseInt(parts[6]), "flag3");
+                    for (int i = 0; i < NUM_FLAGS; i++) {
+                        flags.add(new Flag(Integer.parseInt(parts[2*i+1]), Integer.parseInt(parts[2*i+2]), "flag" + (i+1)));
+                    }
                     System.out.println("Flag coordinates set");
                 } catch (Exception e) {
                     System.err.println("Error parsing flag coordinates: " + e.getMessage());
@@ -486,14 +378,10 @@ public class Server {
                 sendMessage("sendingPlayer " + player.getName() + " " + player.getTeam() + " " + player.getX() + " " + player.getY());
             }
 
-            if (flag1 != null && flag1.isCaptured()) {
-                sendMessage("lockFlag " + flag1.getName());
-            }
-            if (flag2 != null && flag2.isCaptured()) {
-                sendMessage("lockFlag " + flag2.getName());
-            }
-            if (flag3 != null && flag3.isCaptured()) {
-                sendMessage("lockFlag " + flag3.getName());
+            for (Flag flag : flags) {
+                if (flag != null && flag.isCaptured()) {
+                    sendMessage("lockFlag " + flag.getName());
+                }
             }
         }
 
@@ -530,7 +418,7 @@ public class Server {
                     broadcast("sizeOfPlayersIs " + clientCount);
                 }
 
-                synchronized(clients) {
+                synchronized (clients) {
                     clients.remove(this);
                 }
 
@@ -544,9 +432,9 @@ public class Server {
         }
     }
 
-    private void endServer(){
+    private void endServer() {
         System.out.println("ending server");
-        if(clientCount == 0){
+        if (clientCount == 0) {
             exit(0);
         }
     }

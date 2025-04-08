@@ -13,45 +13,52 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 /**
- * This class displays the results of the game.
+ * This class shows the final results of the game in a new window.
+ *
+ * @author Kabir Singh Sidhu
+ * @version 1.0
  */
 public class Results {
-    private Stage stage;
-    private String winningTeam;
+    private final Stage stage;
+    private final String winningTeam;
 
+    /**
+     * Creates a results window.
+     *
+     * @param stage       the main stage where the results will be shown
+     * @param winningTeam the name of the team that won ("red", "blue", or "tie")
+     */
     public Results(Stage stage, String winningTeam) {
         this.stage = stage;
         this.winningTeam = winningTeam;
     }
 
     /**
-     * Show the results window
+     * Displays the results window with the winning team and an exit button.
      */
     public void showResults() {
-        // Create title label
+
+        // Setting up the result info in different labels.
         Label titleLabel = new Label("Game Over");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
 
-        // Create winner label
         Label winnerLabel = new Label(getWinnerText());
         winnerLabel.setFont(Font.font("Arial", 18));
         winnerLabel.setTextFill(getWinnerColor());
 
-        // Create exit button
+        // Button to exit the results window.
         Button exitButton = new Button("Exit Game");
         exitButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
-        exitButton.setOnAction(e -> System.exit(0));
+        exitButton.setOnAction(_-> System.exit(0));
 
-        // Create layout
+        // Organizing all the elements in a VBox.
         VBox layout = new VBox(15);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(20));
         layout.getChildren().addAll(titleLabel, winnerLabel, exitButton);
 
-        // Create scene
+        // Setting up the scene and displaying the stage
         Scene scene = new Scene(layout, 300, 200);
-
-        // Configure stage
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Game Results");
         stage.setScene(scene);
@@ -61,7 +68,8 @@ public class Results {
     }
 
     /**
-     * Get the text to display for the winner
+     * Returns the message to display based on the game status.
+     * @return a string showing the result (Winning team or a tie situation)
      */
     private String getWinnerText() {
         if (winningTeam == null || winningTeam.isEmpty() || winningTeam.equalsIgnoreCase("tie")) {
@@ -72,7 +80,8 @@ public class Results {
     }
 
     /**
-     * Get the color to use for the winner text
+     * Returns the color to use for the winner message.
+     * @return a Color based on the winning team (Red, Blue or White for a tie)
      */
     private Color getWinnerColor() {
         if (winningTeam == null || winningTeam.isEmpty() || winningTeam.equalsIgnoreCase("tie")) {

@@ -39,25 +39,28 @@ public class Maze {
 
     private static final String ADDRESS = dotenv.get("ADDRESS");
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
-
     private final int ROWS = 20;
     private final int COLS = 20;
     private final int[][] grid;
     private final List<Player> players; // stores all players in the game
     private final ArrayList<Flag> flags;
+
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+
     private GridPane gridPane;
     private BorderPane root;
     private Player localPlayer;
     private Label statusLabel;
     private Label name;
     private Label timerLabel;
-    private int redFlagCount = 0;
-    private int blueFlagCount = 0;
     private Label flagCountLabel;
     private Label flagCaptureLabel;
+
+    private int redFlagCount = 0;
+    private int blueFlagCount = 0;
+
 
     /**
      * Constructor
@@ -363,9 +366,11 @@ public class Maze {
      * Send flag coordinates to the server
      */
     private void sendFlagCoordinates(){
-        out.println("flagCoordinates " + flags.get(0).getX() + " " + flags.get(0).getY() + " " +
-                flags.get(1).getX() + " " + flags.get(1).getY() + " " +
-                flags.get(2).getX() + " " + flags.get(2).getY());
+        String message = "flagCoordinates ";
+        for (Flag f : flags) {
+            message += (f.getX() + " " + f.getY() + " ");
+        }
+        out.println(message);
     }
 
     /**
