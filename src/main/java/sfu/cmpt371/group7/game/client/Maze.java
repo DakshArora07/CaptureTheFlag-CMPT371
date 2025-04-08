@@ -1,9 +1,8 @@
-package sfu.cmpt371.group7.game;
+package sfu.cmpt371.group7.game.client;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -16,9 +15,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import sfu.cmpt371.group7.game.logistics.Flag;
-import sfu.cmpt371.group7.game.logistics.Player;
-import sfu.cmpt371.group7.game.ui.Results;
+import sfu.cmpt371.group7.game.model.Flag;
+import sfu.cmpt371.group7.game.model.Player;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,11 +25,12 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class is responsible for creating the maze and handling player movement.
  */
-public class Maze extends Application {
+public class Maze {
 
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("./")
@@ -41,10 +40,11 @@ public class Maze extends Application {
     private static final String ADDRESS = dotenv.get("ADDRESS");
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
 
-    private final int rows = 20;
-    private final int cols = 20;
-    private final char[][] grid;
+    private final int ROWS = 20;
+    private final int COLS = 20;
+    private final int[][] grid;
     private final List<Player> players; // stores all players in the game
+    private final ArrayList<Flag> flags;
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
@@ -58,90 +58,52 @@ public class Maze extends Application {
     private int blueFlagCount = 0;
     private Label flagCountLabel;
     private Label flagCaptureLabel;
-    private Flag flag1; // the right one
-    private Flag flag2; // left
-    private Flag flag3; // bottom
 
     /**
      * Constructor
      */
     public Maze(Player player) {
         localPlayer = player;
-        grid = new char[rows][cols];
+        grid = new int[ROWS][COLS];
         players = new ArrayList<>();
+        flags = new ArrayList<>();
         players.add(localPlayer); // Add local player to the players list
-        initGrid();
+        loadMap();
         System.out.println("player name is " + player.getName());
     }
 
     /**
-     * Initialize the grid with empty spaces
+     * This map reads the text file for that level's map and fills it out. Each number corresponds to a different entity.
+     * @return the filled out map
      */
-    public void initGrid() {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                grid[i][j] = ' ';
+    private void loadMap(){
+        try(InputStreamReader tileReader = new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/map.txt")))) {
+            BufferedReader tileMap = new BufferedReader(tileReader);
+            for(int row = 0; row < ROWS; ++row){
+                String currentLine = tileMap.readLine();
+                char[] tileValues = currentLine.replaceAll(" ", "").toCharArray();
+                for(int col = 0; col < COLS; ++col){
+                    if(tileValues[col] >= '1' && tileValues[col] <= '9') {
+                        grid[row][col] = tileValues[col] - '0';
+                    }
+                }
             }
+        } catch(IOException e){
+            System.out.println("Error reading tile map");
         }
-        addBarriers();
-        addFlags();
     }
 
-    /**
-     * Add barriers to create maze structure
-     */
-    public void addBarriers() {
-        // Left-middle vertical barrier
-        for (int i = 4; i <= 12; i++) {
-            grid[i][5] = 'X';
-        }
-
-        // Right-middle vertical barrier
-        for (int i = 7; i <= 14; i++) {
-            grid[i][15] = 'X';
-        }
-
-        // Bottom-middle horizontal barrier
-        for (int j = 7; j <= 15; j++) {
-            grid[17][j] = 'X';
-        }
-
-        // Add some small gaps to make barriers more interesting
-        grid[7][5] = ' ';  // Gap in left barrier
-        grid[12][15] = ' '; // Gap in right barrier
-        grid[17][10] = ' '; // Gap in bottom barrier
-    }
-
-    /**
-     * Add flag positions
-     */
-    public void addFlags() {
-        // Flag behind left barrier
-        grid[8][7] = 'F';
-
-        // Flag behind right barrier
-        grid[10][13] = 'F';
-
-        // Flag below bottom barrier
-        grid[18][10] = 'F';
-
-        flag1 = new Flag(8, 7, "flag1");
-        flag2 = new Flag(10, 13, "flag2");
-        flag3 = new Flag(18, 10, "flag3");
-    }
-
-    @Override
-    public void start(Stage stage) throws IOException {
-        System.out.println("Starting JavaFX application...");
+    public void initiate(Stage stage) throws IOException {
         connectToServer();
         out.println("resendPlayers");
         getNumberOfPlayers();
         assert(localPlayer != null);
-        sendFlagCoordinates();
-        listenForServerMessages();
 
         // Create UI components
         createUI();
+
+        sendFlagCoordinates();
+        listenForServerMessages();
 
         // Create scene with keyboard controls
         Scene scene = new Scene(root, 800, 800);
@@ -169,15 +131,18 @@ public class Maze extends Application {
         flagCountLabel = new Label("Red: " + redFlagCount + " Blue: " + blueFlagCount);
         flagCaptureLabel = new Label("No flags captured yet");
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
-
         // Draw grid
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+
+        int numFlags = 0;
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
                 Rectangle rect = new Rectangle(30, 30);
-                if (grid[i][j] == 'X') {
+                if (grid[i][j] == 1) {
                     rect.setFill(Color.BLACK);
-                } else if(grid[i][j] == 'F') {
+                } else if(grid[i][j] == 2) {
                     rect.setFill(Color.YELLOW);
+                    flags.add(new Flag(i, j, "flag" + numFlags));
+                    numFlags++;
                 } else {
                     rect.setFill(Color.WHITE);
                 }
@@ -331,12 +296,12 @@ public class Maze extends Application {
      */
     private boolean checkValidMove(int newX, int newY) {
         // Check grid boundaries
-        if (newX < 0 || newX >= rows || newY < 0 || newY >= cols) {
+        if (newX < 0 || newX >= ROWS || newY < 0 || newY >= COLS) {
             return false;
         }
 
         // Check if cell is a barrier
-        if (grid[newX][newY] == 'X') {
+        if (grid[newX][newY] == 1) {
             return false;
         }
 
@@ -398,9 +363,9 @@ public class Maze extends Application {
      * Send flag coordinates to the server
      */
     private void sendFlagCoordinates(){
-        out.println("flagCoordinates " + flag1.getX() + " " + flag1.getY() + " " +
-                flag2.getX() + " " + flag2.getY() + " " +
-                flag3.getX() + " " + flag3.getY());
+        out.println("flagCoordinates " + flags.get(0).getX() + " " + flags.get(0).getY() + " " +
+                flags.get(1).getX() + " " + flags.get(1).getY() + " " +
+                flags.get(2).getX() + " " + flags.get(2).getY());
     }
 
     /**
@@ -597,12 +562,12 @@ public class Maze extends Application {
         if (parts.length >= 2) {
             String flagName = parts[1];
 
-            if (flagName.equals(flag1.getName())) {
-                flag1.setCaptured(true);
-            } else if (flagName.equals(flag2.getName())) {
-                flag2.setCaptured(true);
-            } else if (flagName.equals(flag3.getName())) {
-                flag3.setCaptured(true);
+            if (flagName.equals(flags.get(0).getName())) {
+                flags.get(0).setCaptured(true);
+            } else if (flagName.equals(flags.get(1).getName())) {
+                flags.get(1).setCaptured(true);
+            } else if (flagName.equals(flags.get(2).getName())) {
+                flags.get(2).setCaptured(true);
             }
         }
     }
@@ -695,9 +660,5 @@ public class Maze extends Application {
      */
     private void getNumberOfPlayers() {
         out.println("tellMeTheCurrentPlayers");
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

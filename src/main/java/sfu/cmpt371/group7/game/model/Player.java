@@ -1,4 +1,4 @@
-package sfu.cmpt371.group7.game.logistics;
+package sfu.cmpt371.group7.game.model;
 
 public class Player {
 

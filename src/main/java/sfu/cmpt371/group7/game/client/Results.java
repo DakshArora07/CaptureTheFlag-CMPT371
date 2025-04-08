@@ -1,4 +1,4 @@
-package sfu.cmpt371.group7.game.ui;
+package sfu.cmpt371.group7.game.client;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
