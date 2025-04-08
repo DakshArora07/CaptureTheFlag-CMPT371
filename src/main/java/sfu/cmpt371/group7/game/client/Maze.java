@@ -1,9 +1,8 @@
-package sfu.cmpt371.group7.game;
+package sfu.cmpt371.group7.game.client;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -18,7 +17,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import sfu.cmpt371.group7.game.model.Flag;
 import sfu.cmpt371.group7.game.model.Player;
-import sfu.cmpt371.group7.game.client.Results;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +29,7 @@ import java.util.List;
 /**
  * This class is responsible for creating the maze and handling player movement.
  */
-public class Maze extends Application {
+public class Maze {
 
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("./")
@@ -130,9 +128,7 @@ public class Maze extends Application {
         flag3 = new Flag(18, 10, "flag3");
     }
 
-    @Override
-    public void start(Stage stage) throws IOException {
-        System.out.println("Starting JavaFX application...");
+    public void initiate(Stage stage) throws IOException {
         connectToServer();
         out.println("resendPlayers");
         getNumberOfPlayers();
@@ -695,9 +691,5 @@ public class Maze extends Application {
      */
     private void getNumberOfPlayers() {
         out.println("tellMeTheCurrentPlayers");
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

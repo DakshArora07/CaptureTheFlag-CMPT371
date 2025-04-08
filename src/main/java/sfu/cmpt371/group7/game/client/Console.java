@@ -20,7 +20,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import sfu.cmpt371.group7.game.Maze;
 import sfu.cmpt371.group7.game.model.Player;
 
 import java.io.BufferedReader;
@@ -421,7 +420,7 @@ public class Console extends Application {
                 try {
                     System.out.println("Starting the game...");
                     Stage mazeStage = new Stage();
-                    new Maze(player).start(mazeStage);
+                    new Maze(player).initiate(mazeStage);
 
                     // Close the console window
                     if (primaryStage != null) {

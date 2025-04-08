@@ -15,7 +15,7 @@
         <javafx.version>22-ea+11</javafx.version>
         <maven.compiler.source>22</maven.compiler.source>
         <maven.compiler.target>22</maven.compiler.target>
-        <main.class>sfu.cmpt371.group7.game.client.Main</main.class>
+        <main.class>sfu.cmpt371.group7.game.Game</main.class>
     </properties>
 
     <dependencies>
