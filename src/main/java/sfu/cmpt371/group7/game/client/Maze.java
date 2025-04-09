@@ -507,6 +507,12 @@ public class Maze {
             return false;
         }
 
+        for (Flag flag : flags) {
+            if (flag.getX() == newX && flag.getY() == newY && flag.isCaptured()) {
+                return false;
+            }
+        }
+
         // Check if the move is to a flag position - allow this even if other players are there
         if (isFlagPosition(newX, newY)) {
             return true;
