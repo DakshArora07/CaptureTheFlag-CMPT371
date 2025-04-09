@@ -12,8 +12,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Random;
 
 import static java.lang.System.exit;
 
@@ -21,17 +19,11 @@ import static java.lang.System.exit;
  * this class is responsible for starting the server and handling the clients.
  */
 public class Server {
-
-    private static final Dotenv dotenv = Dotenv.configure()
-            .directory("./")
-            .filename("var.env")
-            .load();
-
-    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
-    private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
+    private static final int PORT = 65000;
     private final int NUM_FLAGS = 7;
     private final double MIN_CAPTURE_DURATION = 3; //:TODO change to 4.5
     private final double MAX_CAPTURE_DURATION = 6; //:TODO change to 5.5
+    private final int numPlayers;
     private final List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
@@ -42,7 +34,8 @@ public class Server {
     private int redTeamCount = 0;
     private int blueTeamCount = 0;
 
-    public Server() {
+    public Server(int numPlayers) {
+        this.numPlayers = numPlayers;
         System.out.println("Server starting on port " + PORT);
     }
 
@@ -88,7 +81,7 @@ public class Server {
      * broadcast message is sent to all the players
      */
     private void checkGameStart() {
-        if (!gameStarted && clientCount >= MIN_PLAYERS) {
+        if (!gameStarted && clientCount >= numPlayers) {
             System.out.println("Starting game with " + clientCount + " players");
             gameStarted = true;
             broadcast("startGame");
@@ -539,10 +532,5 @@ public class Server {
         if (clientCount == 0) {
             exit(0);
         }
-    }
-
-    public static void main(String[] args) {
-        Server server = new Server();
-        server.start();
     }
 }

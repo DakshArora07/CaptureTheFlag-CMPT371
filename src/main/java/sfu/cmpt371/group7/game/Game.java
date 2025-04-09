@@ -1,6 +1,7 @@
 package sfu.cmpt371.group7.game;
 
 import sfu.cmpt371.group7.game.client.Console;
+import sfu.cmpt371.group7.game.client.Menu;
 
 /**
  * Entry point for the Capture the Flag game.
@@ -11,6 +12,6 @@ import sfu.cmpt371.group7.game.client.Console;
 
 public class Game {
     public static void main(String[] args) {
-        Console.main(args);
+        Menu.main(args);
     }
 }

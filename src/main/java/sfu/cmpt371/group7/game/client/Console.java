@@ -1,17 +1,12 @@
 package sfu.cmpt371.group7.game.client;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -36,33 +31,26 @@ import java.net.Socket;
  *
  * @see Player
  */
-public class Console extends Application {
-
-    // Load configuration from .env file
-    private static final Dotenv dotenv = Dotenv.configure()
-            .directory("./")
-            .filename("var.env")
-            .load();
-
-    /**
-     * The IP Address of the sever hosting the game.
-     */
-    private static final String ADDRESS = dotenv.get("ADDRESS");
-
+public class Console {
     /**
      * The Port number at which the server runs.
      */
-    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
-
-    /**
-     * Minimum number of players required to start the game
-     */
-    private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
+    private static final int PORT = 65000;
 
     /**
      * Number of characters allowed in a player's name
      */
     private static final int NAME_LENGTH = 3;
+
+    /**
+     * The IP Address of the sever hosting the game.
+     */
+    private final String ip;
+
+    /**
+     * Minimum number of players required to start the game
+     */
+    private final int numPlayers;
 
     /**
      * Label displaying number of players connected
@@ -123,40 +111,30 @@ public class Console extends Application {
     /**
      * JavaFX Stage to display the GUI
      */
-    private Stage primaryStage;
-
-    /**
-     * The main method to run an instance of {@code Console}.
-     *
-     * @param args Command line arguments provided by the user
-     */
-    public static void main(String[] args) {
-        launch(args);
-    }
+    private final Stage primaryStage;
 
     /**
      * This method is responsible for connecting to the server, launching the game console and
      * listen for incoming server messages.
-     *
-     * @param stage The main JavaFX stage
      */
-    @Override
-    public void start(Stage stage) {
-        this.primaryStage = stage;
+    public Console(String ip, int numPlayers) {
+        this.ip = ip;
+        this.numPlayers = numPlayers;
+        this.primaryStage = new Stage();
 
         try {
             // Connect to the server
             connectToServer();
 
             // Create the UI
-            createUI(stage);
+            createUI();
 
             // Start listening for server messages
             listenForServerMessages();
         } catch (IOException e) {
             System.err.println("Failed to connect to server: " + e.getMessage());
             e.printStackTrace();
-            showConnectionError(stage);
+            showConnectionError(primaryStage);
         }
     }
 
@@ -165,7 +143,7 @@ public class Console extends Application {
      * @param stage The main JavaFX stage
      */
     private void showConnectionError(Stage stage) {
-        Label errorLabel = new Label("Failed to connect to server at " + ADDRESS + ":" + PORT);
+        Label errorLabel = new Label("Failed to connect to server at " + ip + ":" + PORT);
         errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 14px;");
 
         Button exitButton = new Button("Exit");
@@ -182,10 +160,8 @@ public class Console extends Application {
 
     /**
      * Create the user interface
-     *
-     * @param stage The main JavaFX stage.
      */
-    private void createUI(Stage stage) {
+    private void createUI() {
 
         // Create styled root container
         VBox root = new VBox(20);
@@ -208,7 +184,7 @@ public class Console extends Application {
         Label counterPrefix = new Label("Players:");
         counterPrefix.setTextFill(Color.LIGHTGRAY);
 
-        countLabel = new Label(totalCount + " / " + MIN_PLAYERS);
+        countLabel = new Label(totalCount + " / " + numPlayers);
         countLabel.setTextFill(Color.WHITE);
         countLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
@@ -347,11 +323,22 @@ public class Console extends Application {
 
         // Create scene with improved styling
         Scene scene = new Scene(root, 480, 500);
-        stage.setTitle("Capture The Flag - Join Game");
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.centerOnScreen();
-        stage.show();
+        primaryStage.setTitle("Capture The Flag - Join Game");
+        primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        primaryStage.centerOnScreen();
+        primaryStage.setOnCloseRequest(e -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to exit?", ButtonType.YES, ButtonType.NO);;
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    System.exit(0);
+                }
+                if (response == ButtonType.NO) {
+                    e.consume();
+                }
+            });
+        });
+        primaryStage.show();
     }
 
     /**
@@ -403,10 +390,10 @@ public class Console extends Application {
      */
     private void connectToServer() throws IOException {
         try {
-            socket = new Socket(ADDRESS, PORT);
+            socket = new Socket(ip, PORT);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
-            System.out.println("Connected to server at " + ADDRESS + ":" + PORT);
+            System.out.println("Connected to server at " + ip + ":" + PORT);
         } catch (IOException e) {
             System.err.println("Error connecting to server: " + e.getMessage());
             throw e;
@@ -460,7 +447,7 @@ public class Console extends Application {
                 int newCount = Integer.parseInt(parts[1]);
                 totalCount = newCount;
 
-                Platform.runLater(() -> countLabel.setText(totalCount + " / " + MIN_PLAYERS));
+                Platform.runLater(() -> countLabel.setText(totalCount + " / " + numPlayers));
             }
         } catch (Exception e) {
             System.err.println("Error parsing update count message: " + e.getMessage());
@@ -533,19 +520,5 @@ public class Console extends Application {
             );
             timeline.play();
         });
-    }
-
-    /**
-     * Clean up resources when application closes
-     */
-    @Override
-    public void stop() {
-        try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
-        } catch (IOException e) {
-            System.err.println("Error closing socket: " + e.getMessage());
-        }
     }
 }
