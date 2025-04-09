@@ -42,6 +42,19 @@ public class Server {
     private int redTeamCount = 0;
     private int blueTeamCount = 0;
 
+    // Spawn points for players
+    private final int RED_1_X = 2;
+    private final int RED_1_Y = 0;
+
+    private final int RED_2_X = 17;
+    private final int RED_2_Y = 0;
+
+    private final int BLUE_1_X = 2;
+    private final int BLUE_1_Y = 19;
+
+    private final int BLUE_2_X = 17;
+    private final int BLUE_2_Y = 19;
+
     public Server() {
         System.out.println("Server starting on port " + PORT);
     }
@@ -232,24 +245,20 @@ public class Server {
         private void respawnPlayer(Player player) {
             int spawnX = 10, spawnY = 10;
             if (player.getTeam().equals("red")) {
-                if(!isThereAnyPlayerAtPosition(2,0)) {
-                    System.out.println("spawning at 0,2");
-                    spawnX = 2;
-                    spawnY = 0;
-                } else if(!isThereAnyPlayerAtPosition(3,0)){
-                    System.out.println("spawning at 0,3");
-                    spawnX = 3;
-                    spawnY = 0;
+                if(!isThereAnyPlayerAtPosition(RED_1_X, RED_1_Y)) {
+                    spawnX = RED_1_X;
+                    spawnY = RED_1_Y;
+                } else if(!isThereAnyPlayerAtPosition(RED_2_X, RED_2_Y)){
+                    spawnX = RED_2_X;
+                    spawnY = RED_2_Y;
                 }
             } else {
-                if(!isThereAnyPlayerAtPosition(2,19)) {
-                    System.out.println("spawning at 2,19");
-                    spawnX = 2;
-                    spawnY = 19;
-                } else if(!isThereAnyPlayerAtPosition(3,19)){
-                    System.out.println("spawning at 3,19");
-                    spawnX = 3;
-                    spawnY = 19;
+                if(!isThereAnyPlayerAtPosition(BLUE_1_X, BLUE_1_Y)){
+                    spawnX = BLUE_1_X;
+                    spawnY = BLUE_1_Y;
+                } else if(!isThereAnyPlayerAtPosition(BLUE_2_X, BLUE_2_Y)){
+                    spawnX = BLUE_2_X;
+                    spawnY = BLUE_2_Y;
                 }
             }
 
@@ -257,8 +266,6 @@ public class Server {
             player.setX(spawnX);
             player.setY(spawnY);
 
-            // Notify all clients about respawn
-            broadcast("respxawnPlayer " + player.getName() + " " + spawnX + " " + spawnY);
             broadcast("movePlayer " + player.getName() + " " + spawnX + " " + spawnY);
 
             System.out.println("Respawning player " + player.getName() + " to " + spawnX + "," + spawnY);
@@ -277,22 +284,22 @@ public class Server {
                 int x, y;
                 if (team.equals("red")) {
                     if(redTeamCount== 0){
-                        x = 2;
-                        y = 0;
+                        x = RED_1_X;
+                        y = RED_1_Y;
                     }
                     else{
-                        x = 3;
-                        y = 0;
+                        x = RED_2_X;
+                        y = RED_2_Y;
                     }
                     redTeamCount++;
                 } else {
                     if(blueTeamCount == 0){
-                        x = 2;
-                        y = 19;
+                        x = BLUE_1_X;
+                        y = BLUE_1_Y;
                     }
                     else{
-                        x = 3;
-                        y = 19;
+                        x = BLUE_2_X;
+                        y = BLUE_2_Y;
                     }
                     blueTeamCount++;
                 }

@@ -649,7 +649,6 @@ public class Maze {
                         case "lockFlag" -> handleLockFlagMessage(parts);
                         case "sendingPlayer" -> handlePlayerUpdateMessage(parts);
                         case "playerLeft" -> handlePlayerLeftMessage(parts);
-                        case "respawnPlayer" -> handleRespawnPlayerMessage(parts);
                     }
                 }
             } catch (IOException e) {
