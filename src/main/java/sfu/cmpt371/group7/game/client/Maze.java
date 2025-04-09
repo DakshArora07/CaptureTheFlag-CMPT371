@@ -222,6 +222,7 @@ public class Maze {
         localPlayer.setY(spawnY);
         out.println("movePlayer " + localPlayer.getName() + " " + spawnX + " " + spawnY);
         System.out.println("Respawning player " + localPlayer.getName() + " at " + spawnX + "," + spawnY);
+
     }
 
     /**
@@ -263,7 +264,6 @@ public class Maze {
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
         capturePromptLabel = new Label();
         capturePromptLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
-        capturePromptLabel.setText("Hold C to capture flag!");
         capturePromptLabel.setVisible(false);
 
         // Create exit button
@@ -396,7 +396,7 @@ public class Maze {
 
                     if (captureStartTime == -1) {
                         captureStartTime = System.currentTimeMillis();
-
+                        capturePromptLabel.setText("Capturing ...");
                         Timeline stopwatchTimeline = new Timeline(
                                 new KeyFrame(Duration.millis(50), e -> {
                                     if (captureStartTime != -1) {
@@ -418,6 +418,8 @@ public class Maze {
                     localPlayer.setY(newY);
                     if (getUncapturedFlagAtPosition(newX, newY) != null) {
                         f.set(getUncapturedFlagAtPosition(newX, newY));
+                        capturePromptLabel.setVisible(true);
+                        capturePromptLabel.setText("Hold C to capture the flag!");
                     }
                     out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                 }
@@ -435,6 +437,7 @@ public class Maze {
                     Platform.runLater(() -> stopwatchLabel.setText("Stopwatch: 0.00s"));
 
                     out.println("captureDuration " + localPlayer.getName() + " " + flagAtPosition.getName() + " " + durationInSeconds);
+                    capturePromptLabel.setVisible(false);
                     captureStartTime = -1;
                 }
             }
@@ -711,6 +714,7 @@ public class Maze {
             if (playerName.equals(localPlayer.getName())) {
                 Platform.runLater(() -> {
                     sendBackToSpawn();
+                    capturePromptLabel.setVisible(false);
                 });
             } else {
                 // Move other player to their spawn
@@ -805,6 +809,8 @@ public class Maze {
                         blueFlagCount++;
                     }
                     flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
+                    capturePromptLabel.setVisible(true);
+                    capturePromptLabel.setText("Congratulation! You just conquered " + parts[2].toUpperCase());
                 }
             });
         }
