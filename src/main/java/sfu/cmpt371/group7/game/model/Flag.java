@@ -6,9 +6,6 @@ package sfu.cmpt371.group7.game.model;
  * A flag has coordinates (x, y), a name, and a captured status.
  * This object can be used to track the state of the flag during gameplay,
  * such as whether it's been captured or not.
- *
- * @author Kabir Singh Sidhu
- * @version 1.0
  */
 
 public class Flag {

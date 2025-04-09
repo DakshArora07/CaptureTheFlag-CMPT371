@@ -34,8 +34,6 @@ import java.net.Socket;
  * A {@link Player} object can host a new game of join an existing one, choose a name and a
  * team and transition to the actual game.
  *
- * @author Group 7
- * @version 1.0
  * @see Player
  */
 public class Console extends Application {

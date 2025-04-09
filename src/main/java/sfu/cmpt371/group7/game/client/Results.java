@@ -14,9 +14,6 @@ import javafx.stage.Stage;
 
 /**
  * This class shows the final results of the game in a new window.
- *
- * @author Kabir Singh Sidhu
- * @version 1.0
  */
 public class Results {
     private final Stage stage;
