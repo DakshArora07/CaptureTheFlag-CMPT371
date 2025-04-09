@@ -508,7 +508,7 @@ public class Server {
 
                 if (flagToCapture != null && attemptingPlayer != null) {
                     // Check if capture duration is within valid range
-                    if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION) {
+                    if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION && !flagToCapture.isCaptured()) {
                         // Successful capture
                         flagToCapture.setCaptured(true);
                         broadcast("flagCaptured " + playerName + " " + flagName);
