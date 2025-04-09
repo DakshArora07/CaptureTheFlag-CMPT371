@@ -30,8 +30,8 @@ public class Server {
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
     private final int NUM_FLAGS = 7;
-    private final double MIN_CAPTURE_DURATION = 4.5;
-    private final double MAX_CAPTURE_DURATION = 5.2;
+    private final double MIN_CAPTURE_DURATION = 3; //:TODO change to 4.5
+    private final double MAX_CAPTURE_DURATION = 6; //:TODO change to 5.5
     private final List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;

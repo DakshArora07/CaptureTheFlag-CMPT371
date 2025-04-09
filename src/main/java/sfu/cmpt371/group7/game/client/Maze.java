@@ -125,6 +125,10 @@ public class Maze {
     /** Spawn Y coordinate for the player */
     private int spawnY;
 
+    //ONLY FOR TESTING
+    //:TODO
+    private Label stopwatchLabel;
+
 
     /**
      * Constructs a new Maze game instance for the specified player.
@@ -288,7 +292,11 @@ public class Maze {
         timerLabel = new Label("Time left:  3:00");
         timerLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dd3333; -fx-font-weight: bold;");
         startTimer();
-        timerLabel.setVisible(true);
+        timerLabel.setVisible(false);
+
+        stopwatchLabel = new Label("Stopwatch: 0.00s");
+        stopwatchLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
+        stopwatchLabel.setVisible(true);
 
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
@@ -296,7 +304,7 @@ public class Maze {
 
         VBox centerBox = new VBox(5);
         centerBox.setAlignment(Pos.CENTER);
-        centerBox.getChildren().addAll(timerLabel, capturePromptLabel);
+        centerBox.getChildren().addAll(timerLabel, capturePromptLabel, stopwatchLabel);
         topPane.setCenter(centerBox);
 
         topPane.setRight(new Label(" "));
@@ -391,6 +399,19 @@ public class Maze {
 
                     if (captureStartTime == -1) {
                         captureStartTime = System.currentTimeMillis();
+
+                        Timeline stopwatchTimeline = new Timeline(
+                                new KeyFrame(Duration.millis(50), e -> {
+                                    if (captureStartTime != -1) {
+                                        long elapsedTime = System.currentTimeMillis() - captureStartTime;
+                                        double seconds = elapsedTime / 1000.0;
+                                        Platform.runLater(() ->
+                                                stopwatchLabel.setText(String.format("Stopwatch: %.2fs", seconds)));
+                                    }
+                                })
+                        );
+                        stopwatchTimeline.setCycleCount(Timeline.INDEFINITE);
+                        stopwatchTimeline.play();
                     }
                 }
 
@@ -413,6 +434,8 @@ public class Maze {
                     long captureDuration = System.currentTimeMillis() - captureStartTime;
                     double durationInSeconds = captureDuration/1000.0;
                     System.out.println("C pressed for " + durationInSeconds + " seconds");
+
+                    Platform.runLater(() -> stopwatchLabel.setText("Stopwatch: 0.00s"));
 
                     out.println("captureDuration " + localPlayer.getName() + " " + flagAtPosition.getName() + " " + durationInSeconds);
                     captureStartTime = -1;
@@ -513,6 +536,30 @@ public class Maze {
             }
         }
         return false;
+    }
+
+    /**
+     * Updates the visual representation of a flag when it's captured
+     * by changing its color to grey.
+     *
+     * @param flagName The name of the captured flag
+     */
+    private void updateFlagColor(String flagName) {
+        Flag capturedFlag = findFlagByName(flagName);
+        if (capturedFlag == null) return;
+
+        int flagX = capturedFlag.getX();
+        int flagY = capturedFlag.getY();
+
+        Platform.runLater(() -> {
+            for (javafx.scene.Node node : gridPane.getChildren()) {
+                if (GridPane.getRowIndex(node) == flagX && GridPane.getColumnIndex(node) == flagY &&
+                        node instanceof Rectangle) {
+                    ((Rectangle) node).setFill(Color.GREY);
+                    break;
+                }
+            }
+        });
     }
 
     /**
@@ -727,6 +774,7 @@ public class Maze {
     /**
      * Handle flagCaptured message from server
      * @param parts The complete message received from the server
+     * Also changes the color of the flag to grey to mark it as captured
      */
     private void handleFlagCapturedMessage(String[] parts) {
 
@@ -741,6 +789,7 @@ public class Maze {
                 Flag capturedFlag = findFlagByName(flagName);
                 if (capturedFlag != null) {
                     capturedFlag.setCaptured(true);
+                    updateFlagColor(flagName);
                 }
 
                 // Update flag counts
@@ -762,10 +811,14 @@ public class Maze {
      * @param parts The complete message received from the server
      */
     private void handleLockFlagMessage(String[] parts) {
-
         // lockFlag <flag name>
         if (parts.length >= 2) {
-            Objects.requireNonNull(findFlagByName(parts[1])).setCaptured(true);
+            String flagName = parts[1];
+            Flag flag = findFlagByName(flagName);
+            if (flag != null) {
+                flag.setCaptured(true);
+                updateFlagColor(flagName);
+            }
         }
     }
 
