@@ -1,6 +1,5 @@
 package sfu.cmpt371.group7.game.server;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import sfu.cmpt371.group7.game.model.Flag;
 import sfu.cmpt371.group7.game.model.Player;
 
@@ -20,9 +19,6 @@ import static java.lang.System.exit;
  */
 public class Server {
     private static final int PORT = 65000;
-    private final int NUM_FLAGS = 7;
-    private final double MIN_CAPTURE_DURATION = 3; //:TODO change to 4.5
-    private final double MAX_CAPTURE_DURATION = 6; //:TODO change to 5.5
     private final int numPlayers;
     private final List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
@@ -56,7 +52,6 @@ public class Server {
             }
         } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -77,7 +72,7 @@ public class Server {
 
     /**
      * checks if the game should start based on player count
-     * if the mminimum number of players is reached then the
+     * if the minimum number of players is reached then the
      * broadcast message is sent to all the players
      */
     private void checkGameStart() {
@@ -128,13 +123,13 @@ public class Server {
         }
     }
 
-    private boolean isThereAnyPlayerAtPosition(int x, int y) {
+    private boolean isNoPlayerAtPosition(int x, int y) {
         for (Player player : PLAYERS) {
             if (player.getX() == x && player.getY() == y) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
 
@@ -143,7 +138,7 @@ public class Server {
      * implemented as a Runnable to allow for multi-threading
      */
     private class ClientHandler implements Runnable {
-        private Socket socket;
+        private final Socket socket;
         private PrintWriter out;
         private BufferedReader in;
         private String playerName;
@@ -155,7 +150,6 @@ public class Server {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             } catch (IOException e) {
                 System.err.println("Error setting up client handler: " + e.getMessage());
-                e.printStackTrace();
             }
         }
 
@@ -225,21 +219,21 @@ public class Server {
         private void respawnPlayer(Player player) {
             int spawnX = 10, spawnY = 10;
             if (player.getTeam().equals("red")) {
-                if(!isThereAnyPlayerAtPosition(2,0)) {
+                if(isNoPlayerAtPosition(2, 0)) {
                     System.out.println("spawning at 0,2");
                     spawnX = 2;
                     spawnY = 0;
-                } else if(!isThereAnyPlayerAtPosition(3,0)){
+                } else if(isNoPlayerAtPosition(3, 0)){
                     System.out.println("spawning at 0,3");
                     spawnX = 3;
                     spawnY = 0;
                 }
             } else {
-                if(!isThereAnyPlayerAtPosition(2,19)) {
+                if(isNoPlayerAtPosition(2, 19)) {
                     System.out.println("spawning at 2,19");
                     spawnX = 2;
                     spawnY = 19;
-                } else if(!isThereAnyPlayerAtPosition(3,19)){
+                } else if(isNoPlayerAtPosition(3, 19)){
                     System.out.println("spawning at 3,19");
                     spawnX = 3;
                     spawnY = 19;
@@ -251,7 +245,7 @@ public class Server {
             player.setY(spawnY);
 
             // Notify all clients about respawn
-            broadcast("respxawnPlayer " + player.getName() + " " + spawnX + " " + spawnY);
+            broadcast("respawnPlayer " + player.getName() + " " + spawnX + " " + spawnY);
             broadcast("movePlayer " + player.getName() + " " + spawnX + " " + spawnY);
 
             System.out.println("Respawning player " + player.getName() + " to " + spawnX + "," + spawnY);
@@ -271,22 +265,20 @@ public class Server {
                 if (team.equals("red")) {
                     if(redTeamCount== 0){
                         x = 2;
-                        y = 0;
                     }
                     else{
                         x = 3;
-                        y = 0;
                     }
+                    y = 0;
                     redTeamCount++;
                 } else {
                     if(blueTeamCount == 0){
                         x = 2;
-                        y = 19;
                     }
                     else{
                         x = 3;
-                        y = 19;
                     }
+                    y = 19;
                     blueTeamCount++;
                 }
 
@@ -329,7 +321,7 @@ public class Server {
 
         /**
          * handle move player message
-         * first we update the location of the player and then we check if the player has captured a flag
+         * first we update the location of the player, and then we check if the player has captured a flag
          * if then we broadcast the lock flag message to all the players
          */
         private void handleMovePlayer(String[] parts) throws InterruptedException {
@@ -397,6 +389,7 @@ public class Server {
          */
         private void handleFlagCoordinates(String[] parts) {
             //flagCoordinates <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
+            int NUM_FLAGS = 7;
             if (parts.length >= NUM_FLAGS * 2 + 1) {
                 try {
                     for (int i = 0; i < NUM_FLAGS; i++) {
@@ -405,7 +398,6 @@ public class Server {
                     System.out.println("Flag coordinates set");
                 } catch (Exception e) {
                     System.err.println("Error parsing flag coordinates: " + e.getMessage());
-                    e.printStackTrace();
                 }
             }
         }
@@ -472,7 +464,6 @@ public class Server {
                 if (socket != null && !socket.isClosed()) socket.close();
             } catch (IOException e) {
                 System.err.println("Error closing client connection: " + e.getMessage());
-                e.printStackTrace();
             }
         }
 
@@ -494,6 +485,10 @@ public class Server {
 
                 if (flagToCapture != null && attemptingPlayer != null) {
                     // Check if capture duration is within valid range
+                    //:TODO change to 4.5
+                    double MIN_CAPTURE_DURATION = 3;
+                    //:TODO change to 5.5
+                    double MAX_CAPTURE_DURATION = 6;
                     if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION) {
                         // Successful capture
                         flagToCapture.setCaptured(true);

@@ -62,9 +62,6 @@ public class Maze {
     private final ArrayList<Flag> flags;
 
 
-    /** Network communication socket */
-    private Socket socket;
-
     /** Input stream for network communication */
     private BufferedReader in;
 
@@ -79,13 +76,10 @@ public class Maze {
     private BorderPane root;
 
     /** The local player instance */
-    private Player localPlayer;
+    private final Player localPlayer;
 
     /** Label displaying player count status */
     private Label statusLabel;
-
-    /** Label displaying the local player name */
-    private Label name;
 
     /** Label displaying the remaining time in the game */
     private Label timerLabel;
@@ -237,6 +231,7 @@ public class Maze {
         Button exitButton = new Button("Exit");
         exitButton.setStyle("-fx-background-color: #ff0000; -fx-text-fill: white;");
         exitButton.setOnAction(e -> {
+            assert localPlayer != null;
             out.println("exitGame " + localPlayer.getName());
             System.exit(0);
         });
@@ -247,7 +242,10 @@ public class Maze {
         sidePanel.setStyle("-fx-background-color: linear-gradient(to bottom, #eeeeee, #cccccc); "
                 + "-fx-border-color: gray; -fx-border-width: 1;");
         statusLabel = new Label("Players: 0");
-        name = new Label("Name: " + localPlayer.getName());
+
+        assert localPlayer != null;
+        Label name = new Label("Name: " + localPlayer.getName());
+
         statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
         name.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
         sidePanel.getChildren().addAll(statusLabel, name, exitButton, flagCountLabel, flagCaptureLabel);
@@ -405,6 +403,7 @@ public class Maze {
 
                     Platform.runLater(() -> stopwatchLabel.setText("Stopwatch: 0.00s"));
 
+                    assert flagAtPosition != null;
                     out.println("captureDuration " + localPlayer.getName() + " " + flagAtPosition.getName() + " " + durationInSeconds);
                     capturePromptLabel.setVisible(false);
                     captureStartTime = -1;
@@ -454,11 +453,12 @@ public class Maze {
     }
 
     /**
-     * Checks if a move is valid or invalid.
-     * Invalid moves:
-     * - Player moves on a cell out of the 20 x 20 grid
-     * - Player moves on a cell occupied by a wall
-     *
+     * Checks if a move is valid or invalid. <br>
+     * <br>
+     * Invalid moves: <br>
+     * - Player moves on a cell out of the 20 x 20 grid <br>
+     * - Player moves on a cell occupied by a wall <br>
+     * <br>
      * Allows multiple people to stand on a flag
      * @param newX The new x coordinate after moving
      * @param newY The new y coordinate after moving
@@ -580,7 +580,7 @@ public class Maze {
      * Connect to the server
      */
     private void connectToServer() throws IOException {
-        socket = new Socket(ip, PORT);
+        Socket socket = new Socket(ip, PORT);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
@@ -589,9 +589,9 @@ public class Maze {
      * Send the flag coordinates to the server
      */
     private void sendFlagCoordinates(){
-        String message = "flagCoordinates ";
+        StringBuilder message = new StringBuilder("flagCoordinates ");
         for (Flag f : flags) {
-            message += (f.getX() + " " + f.getY() + " ");
+            message.append(f.getX()).append(" ").append(f.getY()).append(" ");
         }
         out.println(message);
     }
@@ -621,7 +621,7 @@ public class Maze {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println(e.getMessage());
             }
         }).start();
     }
@@ -648,25 +648,19 @@ public class Maze {
                 playerToMove = new Player(team, newX, newY, playerName);
                 players.add(playerToMove);
 
-                Platform.runLater(() -> {
-                    addPlayerToUI(playerName, team, newX, newY);
-                });
+                Platform.runLater(() -> addPlayerToUI(playerName, team, newX, newY));
             }
 
             else if(parts[1].equals(localPlayer.getName())){
                 System.out.println("--------------------------");
                 System.out.println("Moving existing player: " + playerName);
                 Player finalPlayerToMove = playerToMove;
-                Platform.runLater(() -> {
-                    movePlayer(finalPlayerToMove, newX, newY);
-                });
+                Platform.runLater(() -> movePlayer(finalPlayerToMove, newX, newY));
             }else {
                 // Move existing player
                 System.out.println("Moving existing player: " + playerName);
                 Player finalPlayerToMove = playerToMove;
-                Platform.runLater(() -> {
-                    movePlayer(finalPlayerToMove, newX, newY);
-                });
+                Platform.runLater(() -> movePlayer(finalPlayerToMove, newX, newY));
             }
         }
     }

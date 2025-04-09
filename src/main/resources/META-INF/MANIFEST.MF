@@ -1,3 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: sfu.cmpt371.group7.game.client.Console
-
+Main-Class: sfu.cmpt371.group7.game.Game
