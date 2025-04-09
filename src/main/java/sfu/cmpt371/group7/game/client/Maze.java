@@ -116,12 +116,6 @@ public class Maze {
     /** Number of flags captured by blue team */
     private int blueFlagCount;
 
-    /** Spawn X coordinate for the player */
-    private int spawnX;
-
-    /** Spawn Y coordinate for the player */
-    private int spawnY;
-
     //ONLY FOR TESTING
     //:TODO
     private Label stopwatchLabel;
@@ -141,15 +135,6 @@ public class Maze {
         blueFlagCount = 0;
         redFlagCount = 0;
         captureStartTime = -1;
-
-        // Initialize spawn location based on team
-        if (player.getTeam().equals("red")) {
-            spawnX = 1;
-            spawnY = 0;
-        } else {
-            spawnX = 1;
-            spawnY = 19;
-        }
 
         loadMap();
         System.out.println("player name is " + player.getName());
@@ -212,17 +197,6 @@ public class Maze {
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.show();
-    }
-
-    /**
-     * Sends the player back to their spawn point
-     */
-    private void sendBackToSpawn(){
-        localPlayer.setX(spawnX);
-        localPlayer.setY(spawnY);
-        out.println("movePlayer " + localPlayer.getName() + " " + spawnX + " " + spawnY);
-        System.out.println("Respawning player " + localPlayer.getName() + " at " + spawnX + "," + spawnY);
-
     }
 
     /**
@@ -420,6 +394,8 @@ public class Maze {
                         f.set(getUncapturedFlagAtPosition(newX, newY));
                         capturePromptLabel.setVisible(true);
                         capturePromptLabel.setText("Hold C to capture the flag!");
+                    } else {
+                        captureStartTime = -1;
                     }
                     out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                 }
@@ -701,38 +677,6 @@ public class Maze {
             }
         }
     }
-
-    /**
-     * Handle respawn player message from server
-     * @param parts The complete message received from the server
-     */
-    private void handleRespawnPlayerMessage(String[] parts) {
-        // respawnPlayer <player name>
-        if (parts.length >= 2) {
-            String playerName = parts[1];
-
-            if (playerName.equals(localPlayer.getName())) {
-                Platform.runLater(() -> {
-                    sendBackToSpawn();
-                    capturePromptLabel.setVisible(false);
-                });
-            } else {
-                // Move other player to their spawn
-                Player playerToRespawn = findPlayerByName(playerName);
-                if (playerToRespawn != null) {
-                    int respawnX = Integer.parseInt(parts[2]);
-                    int respawnY = Integer.parseInt(parts[3]);
-
-                    System.out.println("Respawning player: " + playerName + " at " + respawnX + "," + respawnY);
-
-                    Platform.runLater(() -> {
-                        movePlayer(playerToRespawn, respawnX, respawnY);
-                    });
-                }
-            }
-        }
-    }
-
     /**
      * Handle newPlayer message from server
      * @param parts The complete message received from the server
