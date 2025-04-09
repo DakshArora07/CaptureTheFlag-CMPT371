@@ -141,9 +141,9 @@ public class Server {
      * check if a team has won
      */
     private void checkWinCondition() {
-        if (redFlagCount >= 2) {
+        if (redFlagCount >= 4) {
             broadcast("gameOver red");
-        } else if (blueFlagCount >= 2) {
+        } else if (blueFlagCount >= 4) {
             broadcast("gameOver blue");
         }
     }

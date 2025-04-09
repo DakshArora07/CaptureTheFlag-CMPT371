@@ -30,8 +30,13 @@ import java.net.Socket;
 
 
 /**
- * This class is responsible for getting the name and team of the player.
- * Once MIN_PLAYERS_REQUIRED are connected to the server, the game will start.
+ * The Console class serves as a player's main menu screen in the Capture the Flag game.
+ * A {@link Player} object can host a new game of join an existing one, choose a name and a
+ * team and transition to the actual game.
+ *
+ * @author Group 7
+ * @version 1.0
+ * @see Player
  */
 public class Console extends Application {
 
@@ -41,31 +46,102 @@ public class Console extends Application {
             .filename("var.env")
             .load();
 
+    /**
+     * The IP Address of the sever hosting the game.
+     */
     private static final String ADDRESS = dotenv.get("ADDRESS");
-    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
-    private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
-    private static final int NAME_LENGTH = 3; // Enforcing exactly 3 characters for name
 
+    /**
+     * The Port number at which the server runs.
+     */
+    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+
+    /**
+     * Minimum number of players required to start the game
+     */
+    private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
+
+    /**
+     * Number of characters allowed in a player's name
+     */
+    private static final int NAME_LENGTH = 3;
+
+    /**
+     * Label displaying number of players connected
+     */
     private static Label countLabel;
+
+    /**
+     * Label informing new player's connection to the game
+     */
     private static Label newPlayerLabel;
+
+    /**
+     * Total players joined
+     */
     private static int totalCount = 0;
+
+    /**
+     * Space for the player to write their name
+     */
     private TextField nameField;
+
+    /**
+     * Join red team
+     */
     private Button redButton;
+
+    /**
+     * Join blue team
+     */
     private Button blueButton;
+
+    /**
+     * Player name error message
+     */
     private Label nameErrorLabel;
 
+
+    /**
+     * Network communication socket
+     */
     private Socket socket;
+
+    /**
+     * Input stream for network communication
+     */
     private BufferedReader in;
+
+    /**
+     * Output stream for network communication
+     */
     private PrintWriter out;
 
+    /**
+     * Player playing the game
+     */
     private Player player;
-    private Stage primaryStage;
-    private boolean gameStarting = false;
 
+    /**
+     * JavaFX Stage to display the GUI
+     */
+    private Stage primaryStage;
+
+    /**
+     * The main method to run an instance of {@code Console}.
+     *
+     * @param args Command line arguments provided by the user
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    /**
+     * This method is responsible for connecting to the server, launching the game console and
+     * listen for incoming server messages.
+     *
+     * @param stage The main JavaFX stage
+     */
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
@@ -87,7 +163,8 @@ public class Console extends Application {
     }
 
     /**
-     * Show connection error dialog
+     * Method displaying connection error dialog
+     * @param stage The main JavaFX stage
      */
     private void showConnectionError(Stage stage) {
         Label errorLabel = new Label("Failed to connect to server at " + ADDRESS + ":" + PORT);
@@ -107,8 +184,11 @@ public class Console extends Application {
 
     /**
      * Create the user interface
+     *
+     * @param stage The main JavaFX stage.
      */
     private void createUI(Stage stage) {
+
         // Create styled root container
         VBox root = new VBox(20);
         root.setPadding(new Insets(30));
@@ -277,7 +357,12 @@ public class Console extends Application {
     }
 
     /**
-     * Validate player name (must be exactly 3 characters)
+     * This method validates player's name <br>
+     * A 'valid name' is of length less than or equal to 3.
+     *
+     * @param name The name provided by the player
+     *
+     * @return true if name is valid, false otherwise
      */
     private boolean validatePlayerName(String name) {
         if (name.length() > NAME_LENGTH) {
@@ -304,31 +389,9 @@ public class Console extends Application {
     }
 
     /**
-     * Create the blue team button
-     */
-    private Button createBlueTeamButton() {
-        Button blueButton = new Button("Join blue team");
-        blueButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5555ff; -fx-text-fill: white;");
-        blueButton.setOnAction(e -> {
-            String playerName = nameField.getText().trim();
-            if (validatePlayerName(playerName)) {
-                // Disable buttons to prevent multiple submissions
-                redButton.setDisable(true);
-                blueButton.setDisable(true);
-
-                sendToServer("teamSelection blue " + playerName);
-
-                // Create player
-                player = new Player("blue", 0, 0, playerName);
-                player.setName(playerName);
-                player.setTeam("blue");
-            }
-        });
-        return blueButton;
-    }
-
-    /**
-     * Send a message to the server
+     * This method sends a message to the server
+     *
+     * @param message The message to send
      */
     private void sendToServer(String message) {
         if (out != null) {
@@ -353,25 +416,23 @@ public class Console extends Application {
     }
 
     /**
-     * Listen for messages from the server
+     * This method listens for messages from the server and appropriately handles them.
      */
     private void listenForServerMessages() {
         new Thread(() -> {
             try {
                 String message;
                 while ((message = in.readLine()) != null) {
+                    String[] parts = message.split(" ");
+                    String messageType = parts[0];
                     System.out.println("Received from server: " + message);
 
                     // Process messages based on type
-                    if (message.startsWith("updateCount")) {
-                        handleUpdateCount(message);
-                    } else if (message.startsWith("startGame")) {
-                        handleStartGame();
-                    } else if (message.startsWith("sendingPlayer")) {
-                        handlePlayerData(message);
-                    }
-                    else if(message.startsWith("showPlayerJoined")){
-                        showPlayerJoined(message);
+                    switch (messageType) {
+                        case "updateCount" -> handleUpdateCount(parts);
+                        case "startGame" -> handleStartGame();
+                        case "sendingPlayer" -> handlePlayerData(parts);
+                        case "showPlayerJoined" -> showPlayerJoined(parts);
                     }
                 }
             } catch (IOException e) {
@@ -389,13 +450,16 @@ public class Console extends Application {
     }
 
     /**
-     * Handle update count message
+     * Handles the updateCount message
+     *
+     * @param parts The complete message received from the server
      */
-    private void handleUpdateCount(String message) {
+    private void handleUpdateCount(String[] parts) {
+
+        // updateCount <number of players>
         try {
-            String[] tokens = message.split(" ");
-            if (tokens.length >= 2) {
-                int newCount = Integer.parseInt(tokens[1]);
+            if (parts.length >= 2) {
+                int newCount = Integer.parseInt(parts[1]);
                 totalCount = newCount;
 
                 Platform.runLater(() -> countLabel.setText(totalCount + " / " + MIN_PLAYERS));
@@ -407,44 +471,42 @@ public class Console extends Application {
     }
 
     /**
-     * Handle start game message
+     * Handle startGame message
      */
     private void handleStartGame() {
-        if (!gameStarting) {
-            gameStarting = true;
 
-            Platform.runLater(() -> {
-                try {
-                    System.out.println("Starting the game...");
-                    Stage mazeStage = new Stage();
-                    new Maze(player).initiate(mazeStage);
+        Platform.runLater(() -> {
+            try {
+                System.out.println("Starting the game...");
+                Stage mazeStage = new Stage();
+                new Maze(player).initiate(mazeStage);
 
-                    // Close the console window
-                    if (primaryStage != null) {
-                        primaryStage.close();
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error starting game: " + e.getMessage());
-                    e.printStackTrace();
-                    gameStarting = false;
+                // Close the console window
+                if (primaryStage != null) {
+                    primaryStage.close();
                 }
-            });
-        }
+            } catch (Exception e) {
+                System.err.println("Error starting game: " + e.getMessage());
+                e.printStackTrace();
+
+            }
+        });
     }
 
     /**
-     * Handle player data message
+     * Handle sendingPlayer message
+     *
+     * @param parts The complete message received from the server
      */
-    private void handlePlayerData(String message) {
+    private void handlePlayerData(String[] parts) {
         try {
-            // Format: sendingPlayer <n> <team> <x> <y>
-            String[] tokens = message.split(" ");
+            //sendingPlayer <name> <team> <x> <y>
 
-            if (tokens.length >= 5 && player != null && tokens[1].equals(player.getName())) {
-                player.setName(tokens[1]);
-                player.setTeam(tokens[2]);
-                player.setX(Integer.parseInt(tokens[3]));
-                player.setY(Integer.parseInt(tokens[4]));
+            if (parts.length >= 5 && player != null && parts[1].equals(player.getName())) {
+                player.setName(parts[1]);
+                player.setTeam(parts[2]);
+                player.setX(Integer.parseInt(parts[3]));
+                player.setY(Integer.parseInt(parts[4]));
 
                 System.out.println("Updated player position: " + player.getX() + ", " + player.getY());
             }
@@ -454,9 +516,14 @@ public class Console extends Application {
         }
     }
 
-    private void showPlayerJoined(String message){
-        String team = message.split(" ")[1];
-        String name = message.split(" ")[2];
+    /**
+     * Handles showPlayerJoined message
+     *
+     * @param parts The complete message received from the server
+     */
+    private void showPlayerJoined(String[] parts) {
+        String team = parts[1];
+        String name = parts[2];
 
         Platform.runLater(() -> {
             newPlayerLabel.setText(name + " joined " + team + " team");

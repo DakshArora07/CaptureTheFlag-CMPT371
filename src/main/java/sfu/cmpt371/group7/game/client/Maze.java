@@ -34,6 +34,10 @@ import java.util.Objects;
  * with the server. A {@link Player} object navigates through the maze to capture the
  * {@link Flag} objects.
  *
+ * @see Flag
+ * @see Player
+ * @see Results
+ *
  * @author Group 7
  * @version 1.0
  */
