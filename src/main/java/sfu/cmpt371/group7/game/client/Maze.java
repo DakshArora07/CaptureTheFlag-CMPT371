@@ -13,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -35,88 +36,133 @@ import java.util.concurrent.atomic.AtomicReference;
  * with the server. A {@link Player} object navigates through the maze to capture the
  * {@link Flag} objects.
  *
+ * @author Group 7
+ * @version 1.0
  * @see Flag
  * @see Player
  * @see Results
- *
- * @author Group 7
- * @version 1.0
  */
 
 public class Maze {
 
-    /** Game configuration */
+    /**
+     * Game configuration
+     */
     private static final Dotenv dotenv = Dotenv.configure()
             .directory("./")
             .filename("var.env")
             .load();
 
-    /** The IP Address of the sever hosting the game. */
+    /**
+     * The IP Address of the sever hosting the game.
+     */
     private static final String ADDRESS = dotenv.get("ADDRESS");
 
-    /** The Port number at which the server runs. */
+    /**
+     * The Port number at which the server runs.
+     */
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
 
-    /** Number of rows in the maze*/
+    /**
+     * Number of rows in the maze
+     */
     private final int ROWS = 20;
 
-    /** Number of columns in the maze*/
+    /**
+     * Number of columns in the maze
+     */
     private final int COLS = 20;
 
-    /** The game grid representing the maze */
+    /**
+     * The game grid representing the maze
+     */
     private final int[][] grid;
 
-    /** List of all players in the game */
+    /**
+     * List of all players in the game
+     */
     private final List<Player> players;
 
-    /** List of all flags in the game */
+    /**
+     * List of all flags in the game
+     */
     private final ArrayList<Flag> flags;
 
 
-    /** Network communication socket */
+    /**
+     * Network communication socket
+     */
     private Socket socket;
 
-    /** Input stream for network communication */
+    /**
+     * Input stream for network communication
+     */
     private BufferedReader in;
 
-    /** Output stream for network communication */
+    /**
+     * Output stream for network communication
+     */
     private PrintWriter out;
 
 
-    /** The main game grid UI component */
+    /**
+     * The main game grid UI component
+     */
     private GridPane gridPane;
 
-    /** The root layout container */
+    /**
+     * The root layout container
+     */
     private BorderPane root;
 
-    /** The local player instance */
+    /**
+     * The local player instance
+     */
     private Player localPlayer;
 
-    /** Label displaying player count status */
+    /**
+     * Label displaying player count status
+     */
     private Label statusLabel;
 
-    /** Label displaying the local player name */
+    /**
+     * Label displaying the local player name
+     */
     private Label name;
 
-    /** Label displaying the remaining time in the game */
+    /**
+     * Label displaying the remaining time in the game
+     */
     private Label timerLabel;
 
-    /** Label displaying the total flags captured by each team */
+    /**
+     * Label displaying the total flags captured by each team
+     */
     private Label flagCountLabel;
 
-    /** Label displaying the info about the latest flag capture */
+    /**
+     * Label displaying the info about the latest flag capture
+     */
     private Label flagCaptureLabel;
 
-    /** Label displaying flag capturing messages */
+    /**
+     * Label displaying flag capturing messages
+     */
     private Label capturePromptLabel;
 
-    /** Store the timestamp when player starts attempting to capture a flag*/
+    /**
+     * Store the timestamp when player starts attempting to capture a flag
+     */
     private long captureStartTime;
 
-    /** Number of flags captured by red team */
+    /**
+     * Number of flags captured by red team
+     */
     private int redFlagCount;
 
-    /** Number of flags captured by blue team */
+    /**
+     * Number of flags captured by blue team
+     */
     private int blueFlagCount;
 
 
@@ -145,19 +191,19 @@ public class Maze {
      * 1 - Wall <br>
      * 2 - Flag
      */
-    private void loadMap(){
-        try(InputStreamReader tileReader = new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/map.txt")))) {
+    private void loadMap() {
+        try (InputStreamReader tileReader = new InputStreamReader(Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/map.txt")))) {
             BufferedReader tileMap = new BufferedReader(tileReader);
-            for(int row = 0; row < ROWS; ++row){
+            for (int row = 0; row < ROWS; ++row) {
                 String currentLine = tileMap.readLine();
                 char[] tileValues = currentLine.replaceAll(" ", "").toCharArray();
-                for(int col = 0; col < COLS; ++col){
-                    if(tileValues[col] >= '1' && tileValues[col] <= '9') {
+                for (int col = 0; col < COLS; ++col) {
+                    if (tileValues[col] >= '1' && tileValues[col] <= '9') {
                         grid[row][col] = tileValues[col] - '0';
                     }
                 }
             }
-        } catch(IOException e){
+        } catch (IOException e) {
             System.out.println("Error reading tile map");
         }
     }
@@ -176,7 +222,7 @@ public class Maze {
 
         // Request players' info from the server
         getNumberOfPlayers();
-        assert(localPlayer != null);
+        assert (localPlayer != null);
 
         // Create UI components
         createUI();
@@ -213,7 +259,7 @@ public class Maze {
                 Rectangle rect = new Rectangle(30, 30);
                 if (grid[i][j] == 1) {
                     rect.setFill(Color.BLACK);
-                } else if(grid[i][j] == 2) {
+                } else if (grid[i][j] == 2) {
                     rect.setFill(Color.YELLOW);
                     flags.add(new Flag(i, j, "flag" + numFlags));
                     numFlags++;
@@ -236,7 +282,6 @@ public class Maze {
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
         capturePromptLabel = new Label();
         capturePromptLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
-        capturePromptLabel.setText("Hold C to capture flag!");
         capturePromptLabel.setVisible(false);
 
         // Create exit button
@@ -366,6 +411,8 @@ public class Maze {
                     if (captureStartTime == -1) {
                         captureStartTime = System.currentTimeMillis();
                     }
+                    capturePromptLabel.setText("Capturing...");
+                    capturePromptLabel.setVisible(true);
                 }
 
                 // Update the players x and y co-ordinates according to the moves and inform the server
@@ -374,6 +421,7 @@ public class Maze {
                     localPlayer.setY(newY);
                     if (getUncapturedFlagAtPosition(newX, newY) != null) {
                         f.set(getUncapturedFlagAtPosition(newX, newY));
+                        capturePromptLabel.setText("Hold C to capture " + f.get().getName().toUpperCase());
                     }
                     out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                 }
@@ -383,9 +431,10 @@ public class Maze {
         scene.setOnKeyReleased(event -> {
             if (event.getCode() == KeyCode.C && getUncapturedFlagAtPosition(localPlayer.getX(), localPlayer.getY()) != null) {
                 long captureDuration = System.currentTimeMillis() - captureStartTime;
-                System.out.println("C pressed for " + captureDuration/1000.0 + " seconds");
-                out.println("captureDuration " + localPlayer.getName() + " " + f.get().getName() + " " + captureDuration/1000.0);
+                System.out.println("C pressed for " + captureDuration / 1000.0 + " seconds");
+                out.println("captureDuration " + localPlayer.getName() + " " + f.get().getName() + " " + captureDuration / 1000.0);
                 captureStartTime = -1;
+                capturePromptLabel.setText("Hold C to capture " + f.get().getName().toUpperCase());
             }
         });
     }
@@ -439,7 +488,6 @@ public class Maze {
      *
      * @param newX The new x co-ordinate after moving
      * @param newY The new y co-ordinate after moving
-     *
      * @return false if a move is one of the invalid moves, true otherwise
      */
     private boolean checkValidMove(int newX, int newY) {
@@ -468,18 +516,18 @@ public class Maze {
      * Moves a player on the grid
      *
      * @param player The player to move
-     * @param newX The new x co-ordinate after the move
-     * @param newY The new y co-ordinate after the move
+     * @param newX   The new x co-ordinate after the move
+     * @param newY   The new y co-ordinate after the move
      */
     private void movePlayer(Player player, int newX, int newY) {
         Platform.runLater(() -> {
             // Remove all instances of this player from the grid first
             gridPane.getChildren().removeIf(node ->
                     node instanceof StackPane &&
-                            ((StackPane)node).getChildren().stream()
+                            ((StackPane) node).getChildren().stream()
                                     .anyMatch(child ->
                                             child instanceof Text &&
-                                                    ((Text)child).getText().equals(player.getName())));
+                                                    ((Text) child).getText().equals(player.getName())));
 
             // Update player position
             player.setX(newX);
@@ -515,7 +563,7 @@ public class Maze {
     /**
      * Send the flag coordinates to the server
      */
-    private void sendFlagCoordinates(){
+    private void sendFlagCoordinates() {
         String message = "flagCoordinates ";
         for (Flag f : flags) {
             message += (f.getX() + " " + f.getY() + " ");
@@ -555,6 +603,7 @@ public class Maze {
 
     /**
      * Handles movePlayer message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handleMovePlayerMessage(String[] parts) {
@@ -578,16 +627,14 @@ public class Maze {
                 Platform.runLater(() -> {
                     addPlayerToUI(playerName, team, newX, newY);
                 });
-            }
-
-            else if(parts[1].equals(localPlayer.getName())){
+            } else if (parts[1].equals(localPlayer.getName())) {
                 System.out.println("--------------------------");
                 System.out.println("Moving existing player: " + playerName);
                 Player finalPlayerToMove = playerToMove;
                 Platform.runLater(() -> {
                     movePlayer(finalPlayerToMove, newX, newY);
                 });
-            }else {
+            } else {
                 // Move existing player
                 System.out.println("Moving existing player: " + playerName);
                 Player finalPlayerToMove = playerToMove;
@@ -600,6 +647,7 @@ public class Maze {
 
     /**
      * Handle newPlayer message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handleNewPlayerMessage(String[] parts) {
@@ -621,6 +669,7 @@ public class Maze {
 
     /**
      * Handle sizeOfPlayerIs message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handlePlayerCountMessage(String[] parts) {
@@ -635,6 +684,7 @@ public class Maze {
 
     /**
      * Handle gameOver message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handleGameOverMessage(String[] parts) {
@@ -646,6 +696,7 @@ public class Maze {
 
     /**
      * Handle flagCaptured message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handleFlagCapturedMessage(String[] parts) {
@@ -672,6 +723,11 @@ public class Maze {
                         blueFlagCount++;
                     }
                     flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
+
+                    if (Objects.equals(playerName, localPlayer.getName())) {
+                        capturePromptLabel.setText("Bingo! You captured " + parts[2].toUpperCase());
+                        capturePromptLabel.setVisible(true);
+                    }
                 }
             });
         }
@@ -679,6 +735,7 @@ public class Maze {
 
     /**
      * Handle lockFlag message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handleLockFlagMessage(String[] parts) {
@@ -691,6 +748,7 @@ public class Maze {
 
     /**
      * Handle sendingPlayer message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handlePlayerUpdateMessage(String[] parts) {
@@ -723,6 +781,7 @@ public class Maze {
 
     /**
      * Handle player left message from server
+     *
      * @param parts The complete message received from the server
      */
     private void handlePlayerLeftMessage(String[] parts) {
@@ -735,10 +794,10 @@ public class Maze {
                 // Remove player from UI
                 gridPane.getChildren().removeIf(node ->
                         node instanceof StackPane &&
-                                ((StackPane)node).getChildren().stream()
+                                ((StackPane) node).getChildren().stream()
                                         .anyMatch(child ->
                                                 child instanceof Text &&
-                                                        ((Text)child).getText().equals(playerName)));
+                                                        ((Text) child).getText().equals(playerName)));
 
                 // Remove from players list
                 players.removeIf(p -> p.getName().equals(playerName));
@@ -756,6 +815,7 @@ public class Maze {
 
     /**
      * Helper method to check if a player exists in the game.
+     *
      * @param name The name of the player to lookup
      * @return true if the player already exist, false otherwise
      */
@@ -770,6 +830,7 @@ public class Maze {
 
     /**
      * Helper method to find an existing player in the game
+     *
      * @param name the name of the player to find
      * @return the player if it exists, null otherwise
      */
@@ -784,6 +845,7 @@ public class Maze {
 
     /**
      * Helper method to find an existing flag in the game
+     *
      * @param name the name of the flag to find
      * @return the flag if it exists, null otherwise
      */
@@ -796,11 +858,12 @@ public class Maze {
         return null;
     }
 
-    /** Helper method to verify whether a flag exists at position (x ,y) and if it is
+    /**
+     * Helper method to verify whether a flag exists at position (x ,y) and if it is
      * captured or not.
+     *
      * @param x The x co-ordinate
      * @param y The y co-ordinate
-     *
      * @return true if an uncaptured flag is present at the given position, false otherwise.
      */
     private Flag getUncapturedFlagAtPosition(int x, int y) {
@@ -816,6 +879,7 @@ public class Maze {
 
     /**
      * End the game and show results
+     *
      * @param winner A string with the name of the winning team
      */
     private void endGame(String winner) {
