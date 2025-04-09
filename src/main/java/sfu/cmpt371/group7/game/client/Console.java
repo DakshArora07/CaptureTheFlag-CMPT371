@@ -7,7 +7,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -22,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+
+import static sfu.cmpt371.group7.game.client.Menu.*;
 
 
 /**
@@ -89,11 +90,6 @@ public class Console {
 
 
     /**
-     * Network communication socket
-     */
-    private Socket socket;
-
-    /**
      * Input stream for network communication
      */
     private BufferedReader in;
@@ -133,7 +129,6 @@ public class Console {
             listenForServerMessages();
         } catch (IOException e) {
             System.err.println("Failed to connect to server: " + e.getMessage());
-            e.printStackTrace();
             showConnectionError(primaryStage);
         }
     }
@@ -147,7 +142,7 @@ public class Console {
         errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 14px;");
 
         Button exitButton = new Button("Exit");
-        exitButton.setOnAction(ev -> System.exit(0));
+        exitButton.setOnAction(e -> System.exit(0));
 
         VBox errorBox = new VBox(10, errorLabel, exitButton);
         errorBox.setPadding(new Insets(20));
@@ -164,16 +159,10 @@ public class Console {
     private void createUI() {
 
         // Create styled root container
-        VBox root = new VBox(20);
-        root.setPadding(new Insets(30));
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); -fx-background-radius: 8;");
-        root.setAlignment(Pos.CENTER);
+        VBox root = setupRoot();
 
         // Game title
-        Label titleLabel = new Label("CAPTURE THE FLAG");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
-        titleLabel.setTextFill(Color.WHITE);
-        titleLabel.setEffect(new DropShadow(10, Color.BLACK));
+        Label titleLabel = setupTitleLabel();
 
         // Player counter with styled box
         HBox counterBox = new HBox(10);
@@ -293,9 +282,10 @@ public class Console {
         instructionsTitle.setTextFill(Color.WHITE);
 
         Label instructionsText = new Label(
-                "• Capture flags by standing on them\n" +
-                        "• Use W, A, S, D keys to move\n" +
-                        "• First team to capture 2 flags wins"
+                """
+                        • Capture flags by standing on them
+                        • Use W, A, S, D keys to move
+                        • First team to capture 2 flags wins"""
         );
         instructionsText.setTextFill(Color.LIGHTGRAY);
         instructionsText.setWrapText(true);
@@ -321,24 +311,8 @@ public class Console {
         // Add all elements to root
         root.getChildren().addAll(titleLabel, counterBox, nameSection, buttonBox, instructionsBox, waitingBox);
 
-        // Create scene with improved styling
-        Scene scene = new Scene(root, 480, 500);
-        primaryStage.setTitle("Capture The Flag - Join Game");
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
-        primaryStage.centerOnScreen();
-        primaryStage.setOnCloseRequest(e -> {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to exit?", ButtonType.YES, ButtonType.NO);;
-            alert.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    System.exit(0);
-                }
-                if (response == ButtonType.NO) {
-                    e.consume();
-                }
-            });
-        });
-        primaryStage.show();
+        // Create scene
+        setupScene(primaryStage, root);
     }
 
     /**
@@ -362,9 +336,7 @@ public class Console {
 
             // Reset styling after short delay
             Timeline timeline = new Timeline(
-                    new KeyFrame(Duration.seconds(1.5), evt -> {
-                        nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;");
-                    })
+                    new KeyFrame(Duration.seconds(1.5), e -> nameField.setStyle("-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 5; -fx-font-size: 14px;"))
             );
             timeline.play();
 
@@ -390,7 +362,7 @@ public class Console {
      */
     private void connectToServer() throws IOException {
         try {
-            socket = new Socket(ip, PORT);
+            Socket socket = new Socket(ip, PORT);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("Connected to server at " + ip + ":" + PORT);
@@ -422,7 +394,6 @@ public class Console {
                 }
             } catch (IOException e) {
                 System.err.println("Error reading from server: " + e.getMessage());
-                e.printStackTrace();
 
                 // Show error on UI thread
                 Platform.runLater(() -> {
@@ -444,14 +415,12 @@ public class Console {
         // updateCount <number of players>
         try {
             if (parts.length >= 2) {
-                int newCount = Integer.parseInt(parts[1]);
-                totalCount = newCount;
+                totalCount = Integer.parseInt(parts[1]);
 
                 Platform.runLater(() -> countLabel.setText(totalCount + " / " + numPlayers));
             }
         } catch (Exception e) {
             System.err.println("Error parsing update count message: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -464,7 +433,7 @@ public class Console {
             try {
                 System.out.println("Starting the game...");
                 Stage mazeStage = new Stage();
-                new Maze(player).initiate(mazeStage);
+                new Maze(ip, player).initiate(mazeStage);
 
                 // Close the console window
                 if (primaryStage != null) {
@@ -472,8 +441,6 @@ public class Console {
                 }
             } catch (Exception e) {
                 System.err.println("Error starting game: " + e.getMessage());
-                e.printStackTrace();
-
             }
         });
     }
@@ -497,7 +464,6 @@ public class Console {
             }
         } catch (Exception e) {
             System.err.println("Error parsing player data: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -513,11 +479,7 @@ public class Console {
         Platform.runLater(() -> {
             newPlayerLabel.setText(name + " joined " + team + " team");
             newPlayerLabel.setVisible(true);
-            Timeline timeline = new Timeline(
-                    new KeyFrame(Duration.seconds(2), evt -> {
-                        newPlayerLabel.setVisible(false);
-                    })
-            );
+            Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(2), e -> newPlayerLabel.setVisible(false)));
             timeline.play();
         });
     }

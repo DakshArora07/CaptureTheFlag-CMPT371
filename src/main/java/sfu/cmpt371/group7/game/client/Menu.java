@@ -24,16 +24,9 @@ public class Menu extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CAPTURE THE FLAG");
 
-        VBox root = new VBox(20);
-        root.setPadding(new Insets(30));
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); -fx-background-radius: 8;");
-        root.setAlignment(Pos.CENTER);
+        VBox root = setupRoot();
 
-        // Title
-        Label titleLabel = new Label("CAPTURE THE FLAG");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
-        titleLabel.setTextFill(Color.WHITE);
-        titleLabel.setEffect(new DropShadow(10, Color.BLACK));
+        Label titleLabel = setupTitleLabel();
 
         // New Game Button
         Button newGameButton = new Button("NEW GAME");
@@ -48,12 +41,16 @@ public class Menu extends Application {
 
         root.getChildren().addAll(titleLabel, newGameButton, joinGameButton);
 
+        setupScene(primaryStage, root);
+    }
+
+    public static void setupScene(Stage primaryStage, VBox root) {
         Scene scene = new Scene(root, 480, 500);
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.centerOnScreen();
         primaryStage.setOnCloseRequest(e -> {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to exit?", ButtonType.YES, ButtonType.NO);;
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to exit?", ButtonType.YES, ButtonType.NO);
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.YES) {
                     System.exit(0);
@@ -63,7 +60,26 @@ public class Menu extends Application {
                 }
             });
         });
+        primaryStage.setTitle("Capture the Flag");
         primaryStage.show();
+    }
+
+    public static VBox setupRoot() {
+        VBox root = new VBox(20);
+        root.setPadding(new Insets(30));
+        root.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); -fx-background-radius: 8;");
+        root.setAlignment(Pos.CENTER);
+
+        return root;
+    }
+
+    public static Label setupTitleLabel() {
+        Label titleLabel = new Label("CAPTURE THE FLAG");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
+        titleLabel.setTextFill(Color.WHITE);
+        titleLabel.setEffect(new DropShadow(10, Color.BLACK));
+
+        return titleLabel;
     }
 
     private void showNewGameDialog(Stage stage) {
@@ -97,9 +113,7 @@ public class Menu extends Application {
                 return;
             }
 
-            Thread serverThread = new Thread(() -> {
-                new Server(Integer.parseInt(numPlayers)).start();
-            });
+            Thread serverThread = new Thread(() -> new Server(Integer.parseInt(numPlayers)).start());
             serverThread.setDaemon(true); // ensures it closes when the app exits
             serverThread.start();
 
@@ -108,7 +122,6 @@ public class Menu extends Application {
                 dialogStage.close();
                 stage.close();
             } catch (Exception ex) {
-                ex.printStackTrace();
                 showAlert("Failed to launch game screen.");
             }
         });
@@ -146,15 +159,11 @@ public class Menu extends Application {
                 return;
             }
 
-            // TODO: Pass IP to Console (if you modify Console to accept IP as input)
-            System.setProperty("ADDRESS", ip); // or pass via custom constructor
-
             try {
                 new Console(ip, Integer.parseInt(numPlayers));
                 joinStage.close();
                 stage.close();
             } catch (Exception ex) {
-                ex.printStackTrace();
                 showAlert("Failed to connect to host.");
             }
         });

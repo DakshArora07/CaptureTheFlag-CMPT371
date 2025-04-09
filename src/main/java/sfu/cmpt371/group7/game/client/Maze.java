@@ -1,6 +1,5 @@
 package sfu.cmpt371.group7.game.client;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -41,24 +40,17 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 
 public class Maze {
-
-    /** Game configuration */
-    private static final Dotenv dotenv = Dotenv.configure()
-            .directory("./")
-            .filename("var.env")
-            .load();
-
-    /** The IP Address of the sever hosting the game. */
-    private static final String ADDRESS = dotenv.get("ADDRESS");
-
     /** The Port number at which the server runs. */
-    private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
+    private static final int PORT = 65000;
 
     /** Number of rows in the maze*/
     private final int ROWS = 20;
 
     /** Number of columns in the maze*/
     private final int COLS = 20;
+
+    /** The IP Address of the sever hosting the game. */
+    private final String ip;
 
     /** The game grid representing the maze */
     private final int[][] grid;
@@ -126,7 +118,8 @@ public class Maze {
      *
      * @param player The local player who will be playing the game
      */
-    public Maze(Player player) {
+    public Maze(String ip, Player player) {
+        this.ip = ip;
         localPlayer = player;
         grid = new int[ROWS][COLS];
         players = new ArrayList<>();
@@ -587,7 +580,7 @@ public class Maze {
      * Connect to the server
      */
     private void connectToServer() throws IOException {
-        socket = new Socket(ADDRESS, PORT);
+        socket = new Socket(ip, PORT);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
