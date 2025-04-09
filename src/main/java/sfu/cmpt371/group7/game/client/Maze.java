@@ -119,6 +119,12 @@ public class Maze {
     /** Number of flags captured by blue team */
     private int blueFlagCount;
 
+    /** Spawn X coordinate for the player */
+    private int spawnX;
+
+    /** Spawn Y coordinate for the player */
+    private int spawnY;
+
 
     /**
      * Constructs a new Maze game instance for the specified player.
@@ -134,6 +140,16 @@ public class Maze {
         blueFlagCount = 0;
         redFlagCount = 0;
         captureStartTime = -1;
+
+        // Initialize spawn location based on team
+        if (player.getTeam().equals("red")) {
+            spawnX = 1;
+            spawnY = 0;
+        } else {
+            spawnX = 1;
+            spawnY = 19;
+        }
+
         loadMap();
         System.out.println("player name is " + player.getName());
     }
@@ -195,6 +211,16 @@ public class Maze {
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.show();
+    }
+
+    /**
+     * Sends the player back to their spawn point
+     */
+    private void sendBackToSpawn(){
+        localPlayer.setX(spawnX);
+        localPlayer.setY(spawnY);
+        out.println("movePlayer " + localPlayer.getName() + " " + spawnX + " " + spawnY);
+        System.out.println("Respawning player " + localPlayer.getName() + " at " + spawnX + "," + spawnY);
     }
 
     /**
@@ -262,7 +288,7 @@ public class Maze {
         timerLabel = new Label("Time left:  3:00");
         timerLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dd3333; -fx-font-weight: bold;");
         startTimer();
-        timerLabel.setVisible(false);
+        timerLabel.setVisible(true);
 
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
@@ -382,10 +408,15 @@ public class Maze {
 
         scene.setOnKeyReleased(event -> {
             if (event.getCode() == KeyCode.C && getUncapturedFlagAtPosition(localPlayer.getX(), localPlayer.getY()) != null) {
-                long captureDuration = System.currentTimeMillis() - captureStartTime;
-                System.out.println("C pressed for " + captureDuration/1000.0 + " seconds");
-                out.println("captureDuration " + localPlayer.getName() + " " + f.get().getName() + " " + captureDuration/1000.0);
-                captureStartTime = -1;
+                Flag flagAtPosition = getUncapturedFlagAtPosition(localPlayer.getX(), localPlayer.getY());
+                if (captureStartTime != -1) {
+                    long captureDuration = System.currentTimeMillis() - captureStartTime;
+                    double durationInSeconds = captureDuration/1000.0;
+                    System.out.println("C pressed for " + durationInSeconds + " seconds");
+
+                    out.println("captureDuration " + localPlayer.getName() + " " + flagAtPosition.getName() + " " + durationInSeconds);
+                    captureStartTime = -1;
+                }
             }
         });
     }
@@ -431,19 +462,18 @@ public class Maze {
     }
 
     /**
-     * Checks if a move is valid or invalid <br><br>
-     * Invalid moves: <br>
-     * Player moves on a cell out of the 20 x 20 grid <br>
-     * Player moves on a cell occupied by a wall<br>
-     * Player moves on a cell (other than a flag) occupied by another player <br>
+     * Checks if a move is valid or invalid.
+     * Invalid moves:
+     * - Player moves on a cell out of the 20 x 20 grid
+     * - Player moves on a cell occupied by a wall
      *
-     * @param newX The new x co-ordinate after moving
-     * @param newY The new y co-ordinate after moving
-     *
+     * Allows multiple people to stand on a flag
+     * @param newX The new x coordinate after moving
+     * @param newY The new y coordinate after moving
      * @return false if a move is one of the invalid moves, true otherwise
+     *
      */
     private boolean checkValidMove(int newX, int newY) {
-
         // Check grid boundaries
         if (newX < 0 || newX >= ROWS || newY < 0 || newY >= COLS) {
             return false;
@@ -454,6 +484,11 @@ public class Maze {
             return false;
         }
 
+        // Check if the move is to a flag position - allow this even if other players are there
+        if (isFlagPosition(newX, newY)) {
+            return true;
+        }
+
         // Check if cell is occupied by another player
         for (Player p : players) {
             if (p != localPlayer && p.getX() == newX && p.getY() == newY) {
@@ -462,6 +497,22 @@ public class Maze {
         }
 
         return true;
+    }
+
+    /**
+     * Helper method to check if a position contains a flag
+     *
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @return true if a flag is at this position, false otherwise
+     */
+    private boolean isFlagPosition(int x, int y) {
+        for (Flag flag : flags) {
+            if (flag.getX() == x && flag.getY() == y) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -545,6 +596,7 @@ public class Maze {
                         case "lockFlag" -> handleLockFlagMessage(parts);
                         case "sendingPlayer" -> handlePlayerUpdateMessage(parts);
                         case "playerLeft" -> handlePlayerLeftMessage(parts);
+                        case "respawnPlayer" -> handleRespawnPlayerMessage(parts);
                     }
                 }
             } catch (IOException e) {
@@ -594,6 +646,34 @@ public class Maze {
                 Platform.runLater(() -> {
                     movePlayer(finalPlayerToMove, newX, newY);
                 });
+            }
+        }
+    }
+
+    /**
+     * Handle respawn player message from server
+     * @param parts The complete message received from the server
+     */
+    private void handleRespawnPlayerMessage(String[] parts) {
+        // respawnPlayer <player name>
+        if (parts.length >= 2) {
+            String playerName = parts[1];
+
+            if (playerName.equals(localPlayer.getName())) {
+                Platform.runLater(() -> {
+                    sendBackToSpawn();
+                });
+            } else {
+                // Move other player to their spawn
+                Player playerToRespawn = findPlayerByName(playerName);
+                if (playerToRespawn != null) {
+                    int respawnX = playerToRespawn.getTeam().equals("red") ? 1 : 1;
+                    int respawnY = playerToRespawn.getTeam().equals("red") ? 0 : 19;
+
+                    Platform.runLater(() -> {
+                        movePlayer(playerToRespawn, respawnX, respawnY);
+                    });
+                }
             }
         }
     }
@@ -796,12 +876,13 @@ public class Maze {
         return null;
     }
 
-    /** Helper method to verify whether a flag exists at position (x ,y) and if it is
+    /**
+     * Helper method to verify whether a flag exists at position (x ,y) and if it is
      * captured or not.
      * @param x The x co-ordinate
      * @param y The y co-ordinate
      *
-     * @return true if an uncaptured flag is present at the given position, false otherwise.
+     * @return the Flag object if an uncaptured flag is present at the given position, null otherwise.
      */
     private Flag getUncapturedFlagAtPosition(int x, int y) {
         for (Flag flag : flags) {

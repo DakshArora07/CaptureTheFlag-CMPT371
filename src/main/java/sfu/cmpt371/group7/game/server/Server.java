@@ -99,35 +99,6 @@ public class Server {
     }
 
     /**
-     * checks if a move has resulted in capturing a flag
-     * checks if the players are in the same coordinates as the flag
-     * if it is true then the broadcast message is sent to all the players to lock the flag
-     * the red flag count and the blue flag count is also increased
-     */
-
-//    private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
-//
-//        Player player = findPlayerByName(name);
-//        assert player != null;
-//
-//        for (Flag flag : flags) {
-//            if (flag != null && flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
-//                flag.setCaptured(true);
-//                broadcast("flagCaptured " + name + " " + flag.getName());
-//                broadcast("lockFlag " + flag.getName());
-//                if (player.getTeam().equals("red")) {
-//                    redFlagCount++;
-//                } else {
-//                    blueFlagCount++;
-//                }
-//                checkWinCondition();
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-
-    /**
      * find a player by their name
      */
     private Player findPlayerByName(String name) {
@@ -160,6 +131,19 @@ public class Server {
         } else if (blueFlagCount >= 4) {
             broadcast("gameOver blue");
         }
+    }
+
+    /**
+     * Find all players at a specific position
+     */
+    private List<Player> findPlayersAtPosition(int x, int y) {
+        List<Player> playersAtPosition = new ArrayList<>();
+        for (Player player : PLAYERS) {
+            if (player.getX() == x && player.getY() == y) {
+                playersAtPosition.add(player);
+            }
+        }
+        return playersAtPosition;
     }
 
     /**
@@ -241,6 +225,31 @@ public class Server {
             } finally {
                 handleDisconnect();
             }
+        }
+
+        /**
+         * Respawn a player to their team's spawn point
+         */
+        private void respawnPlayer(Player player) {
+            // Determine spawn position based on team
+            int spawnX, spawnY;
+            if (player.getTeam().equals("red")) {
+                spawnX = 1; // Adjust these values based on your map design
+                spawnY = 0;
+            } else {
+                spawnX = 1; // Adjust these values based on your map design
+                spawnY = 19;
+            }
+
+            // Update player position
+            player.setX(spawnX);
+            player.setY(spawnY);
+
+            // Notify all clients about respawn
+            broadcast("respawnPlayer " + player.getName());
+            broadcast("movePlayer " + player.getName() + " " + spawnX + " " + spawnY);
+
+            System.out.println("Respawning player " + player.getName() + " to " + spawnX + "," + spawnY);
         }
 
         /**
@@ -449,27 +458,54 @@ public class Server {
             }
         }
 
+        /**
+         * Handle capture duration message from clients
+         * Checks if duration is within valid range (4.5-5.2 seconds)
+         * If valid, flag is captured and any other players on the flag are respawned
+         * If invalid, the attempting player is respawned
+         */
         private void handleCaptureDuration(String[] parts) {
-
             // captureDuration <player name> <flag name> <time (sec)>
-
             if (parts.length >= 4) {
-                if (Double.parseDouble(parts[3]) >= MIN_CAPTURE_DURATION && Double.parseDouble(parts[3]) <= MAX_CAPTURE_DURATION) {
-                    Flag f = findFlagByName(parts[2]);
-                    Player p = findPlayerByName(parts[1]);
-                    if (f != null) {
-                        f.setCaptured(true);
-                        broadcast("flagCaptured " + parts[1] + " " + parts[2]);
-                        if (p.getTeam().equals("red")) {
+                String playerName = parts[1];
+                String flagName = parts[2];
+                double duration = Double.parseDouble(parts[3]);
+
+                Flag flagToCapture = findFlagByName(flagName);
+                Player attemptingPlayer = findPlayerByName(playerName);
+
+                if (flagToCapture != null && attemptingPlayer != null) {
+                    // Check if capture duration is within valid range
+                    if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION) {
+                        // Successful capture
+                        flagToCapture.setCaptured(true);
+                        broadcast("flagCaptured " + playerName + " " + flagName);
+
+                        // Update team score
+                        if (attemptingPlayer.getTeam().equals("red")) {
                             redFlagCount++;
                         } else {
                             blueFlagCount++;
                         }
+
+                        // Check for other players on the same flag position and respawn them
+                        for (Player player : PLAYERS) {
+                            if (!player.getName().equals(playerName) &&
+                                    player.getX() == flagToCapture.getX() &&
+                                    player.getY() == flagToCapture.getY()) {
+
+                                respawnPlayer(player);
+                            }
+                        }
+
+                        // Check if this capture results in a win
                         checkWinCondition();
+                    } else {
+                        // Failed capture - respawn the player
+                        respawnPlayer(attemptingPlayer);
                     }
                 }
             }
-
         }
     }
 
