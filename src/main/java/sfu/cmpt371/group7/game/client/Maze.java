@@ -720,8 +720,10 @@ public class Maze {
                 // Move other player to their spawn
                 Player playerToRespawn = findPlayerByName(playerName);
                 if (playerToRespawn != null) {
-                    int respawnX = playerToRespawn.getTeam().equals("red") ? 1 : 1;
-                    int respawnY = playerToRespawn.getTeam().equals("red") ? 0 : 19;
+                    int respawnX = Integer.parseInt(parts[2]);
+                    int respawnY = Integer.parseInt(parts[3]);
+
+                    System.out.println("Respawning player: " + playerName + " at " + respawnX + "," + respawnY);
 
                     Platform.runLater(() -> {
                         movePlayer(playerToRespawn, respawnX, respawnY);
