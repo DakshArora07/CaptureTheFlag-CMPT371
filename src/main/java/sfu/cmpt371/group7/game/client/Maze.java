@@ -718,7 +718,9 @@ public class Maze {
                     }
                     flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
                     capturePromptLabel.setVisible(true);
-                    capturePromptLabel.setText("Congratulation! You just conquered " + parts[2].toUpperCase());
+                    if (playerName.equals(localPlayer.getName())) {
+                        capturePromptLabel.setText("Congratulation! You just conquered " + parts[2].toUpperCase());
+                    }
                 }
             });
         }
