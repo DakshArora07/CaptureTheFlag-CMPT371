@@ -34,6 +34,11 @@ import static sfu.cmpt371.group7.game.client.Menu.*;
  */
 public class Console {
     /**
+     * Minimum number of players required to start the game
+     */
+    private static final int NUM_PLAYERS = 4;
+
+    /**
      * The Port number at which the server runs.
      */
     private static final int PORT = 65000;
@@ -47,11 +52,6 @@ public class Console {
      * The IP Address of the sever hosting the game.
      */
     private final String ip;
-
-    /**
-     * Minimum number of players required to start the game
-     */
-    private final int numPlayers;
 
     /**
      * Label displaying number of players connected
@@ -113,9 +113,8 @@ public class Console {
      * This method is responsible for connecting to the server, launching the game console and
      * listen for incoming server messages.
      */
-    public Console(String ip, int numPlayers) {
+    public Console(String ip) {
         this.ip = ip;
-        this.numPlayers = numPlayers;
         this.primaryStage = new Stage();
 
         try {
@@ -173,7 +172,7 @@ public class Console {
         Label counterPrefix = new Label("Players:");
         counterPrefix.setTextFill(Color.LIGHTGRAY);
 
-        countLabel = new Label(totalCount + " / " + numPlayers);
+        countLabel = new Label(totalCount + " / " + NUM_PLAYERS);
         countLabel.setTextFill(Color.WHITE);
         countLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
@@ -417,7 +416,7 @@ public class Console {
             if (parts.length >= 2) {
                 totalCount = Integer.parseInt(parts[1]);
 
-                Platform.runLater(() -> countLabel.setText(totalCount + " / " + numPlayers));
+                Platform.runLater(() -> countLabel.setText(totalCount + " / " + NUM_PLAYERS));
             }
         } catch (Exception e) {
             System.err.println("Error parsing update count message: " + e.getMessage());

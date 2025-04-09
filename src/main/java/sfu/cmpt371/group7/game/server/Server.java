@@ -18,8 +18,8 @@ import static java.lang.System.exit;
  * this class is responsible for starting the server and handling the clients.
  */
 public class Server {
+    private static final int NUM_PLAYERS = 4;
     private static final int PORT = 65000;
-    private final int numPlayers;
     private final List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
@@ -30,8 +30,7 @@ public class Server {
     private int redTeamCount = 0;
     private int blueTeamCount = 0;
 
-    public Server(int numPlayers) {
-        this.numPlayers = numPlayers;
+    public Server() {
         System.out.println("Server starting on port " + PORT);
     }
 
@@ -76,7 +75,7 @@ public class Server {
      * broadcast message is sent to all the players
      */
     private void checkGameStart() {
-        if (!gameStarted && clientCount >= numPlayers) {
+        if (!gameStarted && clientCount >= NUM_PLAYERS) {
             System.out.println("Starting game with " + clientCount + " players");
             gameStarted = true;
             broadcast("startGame");
@@ -485,10 +484,8 @@ public class Server {
 
                 if (flagToCapture != null && attemptingPlayer != null) {
                     // Check if capture duration is within valid range
-                    //:TODO change to 4.5
                     double MIN_CAPTURE_DURATION = 3;
-                    //:TODO change to 5.5
-                    double MAX_CAPTURE_DURATION = 6;
+                    double MAX_CAPTURE_DURATION = 4;
                     if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION && !flagToCapture.isCaptured()) {
                         // Successful capture
                         flagToCapture.setCaptured(true);

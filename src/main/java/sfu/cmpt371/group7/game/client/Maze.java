@@ -102,10 +102,6 @@ public class Maze {
     /** Number of flags captured by blue team */
     private int blueFlagCount;
 
-    //ONLY FOR TESTING
-    //:TODO
-    private Label stopwatchLabel;
-
 
     /**
      * Constructs a new Maze game instance for the specified player.
@@ -256,17 +252,13 @@ public class Maze {
         startTimer();
         timerLabel.setVisible(false);
 
-        stopwatchLabel = new Label("Stopwatch: 0.00s");
-        stopwatchLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
-        stopwatchLabel.setVisible(true);
-
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
         topPane.setLeft(new Label(" "));
 
         VBox centerBox = new VBox(5);
         centerBox.setAlignment(Pos.CENTER);
-        centerBox.getChildren().addAll(timerLabel, capturePromptLabel, stopwatchLabel);
+        centerBox.getChildren().addAll(timerLabel, capturePromptLabel);
         topPane.setCenter(centerBox);
 
         topPane.setRight(new Label(" "));
@@ -362,18 +354,6 @@ public class Maze {
                     if (captureStartTime == -1) {
                         captureStartTime = System.currentTimeMillis();
                         capturePromptLabel.setText("Capturing ...");
-                        Timeline stopwatchTimeline = new Timeline(
-                                new KeyFrame(Duration.millis(50), e -> {
-                                    if (captureStartTime != -1) {
-                                        long elapsedTime = System.currentTimeMillis() - captureStartTime;
-                                        double seconds = elapsedTime / 1000.0;
-                                        Platform.runLater(() ->
-                                                stopwatchLabel.setText(String.format("Stopwatch: %.2fs", seconds)));
-                                    }
-                                })
-                        );
-                        stopwatchTimeline.setCycleCount(Timeline.INDEFINITE);
-                        stopwatchTimeline.play();
                     }
                 }
 
@@ -400,9 +380,6 @@ public class Maze {
                     long captureDuration = System.currentTimeMillis() - captureStartTime;
                     double durationInSeconds = captureDuration/1000.0;
                     System.out.println("C pressed for " + durationInSeconds + " seconds");
-
-                    Platform.runLater(() -> stopwatchLabel.setText("Stopwatch: 0.00s"));
-
                     assert flagAtPosition != null;
                     out.println("captureDuration " + localPlayer.getName() + " " + flagAtPosition.getName() + " " + durationInSeconds);
                     capturePromptLabel.setVisible(false);

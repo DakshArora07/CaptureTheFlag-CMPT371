@@ -17,9 +17,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class Menu extends Application {
-
-    private String numPlayers;
-
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CAPTURE THE FLAG");
@@ -91,11 +88,6 @@ public class Menu extends Application {
         dialogVBox.setStyle("-fx-background-color: #ecf0f1; -fx-background-radius: 10;");
         dialogVBox.setAlignment(Pos.CENTER);
 
-        Label instruction = new Label("Enter number of players:");
-        TextField playerCountField = new TextField();
-        playerCountField.setMaxWidth(200);
-        playerCountField.setPromptText("e.g. 4");
-
         String address = "Unknown";
         try {
             address = InetAddress.getLocalHost().getHostAddress();
@@ -107,18 +99,13 @@ public class Menu extends Application {
 
         String ip = address;
         startButton.setOnAction(e -> {
-            numPlayers = playerCountField.getText().trim();
-            if (!numPlayers.matches("\\d+")) {
-                showAlert("Please enter a valid number.");
-                return;
-            }
 
-            Thread serverThread = new Thread(() -> new Server(Integer.parseInt(numPlayers)).start());
+            Thread serverThread = new Thread(() -> new Server().start());
             serverThread.setDaemon(true); // ensures it closes when the app exits
             serverThread.start();
 
             try {
-                new Console(ip, Integer.parseInt(numPlayers));
+                new Console(ip);
                 dialogStage.close();
                 stage.close();
             } catch (Exception ex) {
@@ -126,7 +113,7 @@ public class Menu extends Application {
             }
         });
 
-        dialogVBox.getChildren().addAll(instruction, playerCountField, ipLabel, startButton);
+        dialogVBox.getChildren().addAll(ipLabel, startButton);
 
         Scene dialogScene = new Scene(dialogVBox, 350, 250);
         dialogStage.setScene(dialogScene);
@@ -160,7 +147,7 @@ public class Menu extends Application {
             }
 
             try {
-                new Console(ip, 1);
+                new Console(ip);
                 joinStage.close();
                 stage.close();
             } catch (Exception ex) {
