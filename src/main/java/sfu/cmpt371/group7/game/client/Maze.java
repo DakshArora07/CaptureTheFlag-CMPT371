@@ -280,6 +280,36 @@ public class Maze {
     }
 
     /**
+     * Add a player to the UI
+     */
+    private void addPlayerToUI(String playerName, String team, int x, int y) {
+        // Create new player object if it doesn't exist
+        Player player = findPlayerByName(playerName);
+        if (player == null) {
+            player = new Player(team, x, y, playerName);
+            players.add(player);
+        } else {
+            // Update existing player's position
+            player.setX(x);
+            player.setY(y);
+        }
+
+        // Create visual representation
+        Rectangle rect = new Rectangle(30, 30);
+        rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
+        rect.setStroke(Color.GRAY);
+
+        Text textNode = new Text(playerName);
+        textNode.setFill(Color.WHITE);
+
+        // Stack them together
+        StackPane pane = new StackPane(rect, textNode);
+
+        // Add to grid
+        gridPane.add(pane, y, x);
+    }
+
+    /**
      * Set up keyboard controls for player movement <br>
      * W - move up <br>
      * S - move down <br>
@@ -352,34 +382,12 @@ public class Maze {
         });
     }
 
-    private boolean checkForUncapturedFlagAtPosition(int x, int y) {
-        for (Flag flag : flags) {
-
-            if (flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
-                capturePromptLabel.setVisible(true);
-                return true;
-            }
-        }
-        capturePromptLabel.setVisible(false);
-        return false;
-    }
-
     /**
-     * End the game and show results
-     */
-    private void endGame(String winner) {
-        Platform.runLater(() -> {
-            Stage resultStage = new Stage();
-            Results results = new Results(resultStage, winner);
-            results.showResults();
-        });
-    }
-
-    /**
-     * Start the game timer
+     * Starts the game timer of 3 minutes
      */
     private void startTimer() {
-        final int totalTime = 180; // 3 minutes in seconds
+        // 3 minutes time
+        final int totalTime = 180;
         final Timeline[] timelineRef = new Timeline[1];
 
         timerLabel.setText(String.format("Time left: %d:%02d", totalTime / 60, totalTime % 60));
@@ -415,9 +423,19 @@ public class Maze {
     }
 
     /**
-     * Check if a move is valid
+     * Checks if a move is valid or invalid <br><br>
+     * Invalid moves: <br>
+     * Player moves on a cell out of the 20 x 20 grid <br>
+     * Player moves on a cell occupied by a wall<br>
+     * Player moves on a cell (other than a flag) occupied by another player <br>
+     *
+     * @param newX The new x co-ordinate after moving
+     * @param newY The new y co-ordinate after moving
+     *
+     * @return false if a move is one of the invalid moves, true otherwise
      */
     private boolean checkValidMove(int newX, int newY) {
+
         // Check grid boundaries
         if (newX < 0 || newX >= ROWS || newY < 0 || newY >= COLS) {
             return false;
@@ -426,6 +444,13 @@ public class Maze {
         // Check if cell is a barrier
         if (grid[newX][newY] == 1) {
             return false;
+        }
+
+        // Allows multiple players to be on a flag cell together.
+        for (Flag flag : flags) {
+            if (flag.getX() == newX && flag.getY() == newY) {
+                return true;
+            }
         }
 
         // Check if cell is occupied by another player
@@ -439,7 +464,11 @@ public class Maze {
     }
 
     /**
-     * Move a player on the grid
+     * Moves a player on the grid
+     *
+     * @param player The player to move
+     * @param newX The new x co-ordinate after the move
+     * @param newY The new y co-ordinate after the move
      */
     private void movePlayer(Player player, int newX, int newY) {
         Platform.runLater(() -> {
@@ -455,7 +484,7 @@ public class Maze {
             player.setX(newX);
             player.setY(newY);
 
-            // Create player representation
+            // Create a new player representation
             Rectangle rect = new Rectangle(30, 30);
             rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
             rect.setStroke(Color.GRAY);
@@ -466,7 +495,7 @@ public class Maze {
             // Stack them together
             StackPane pane = new StackPane(rect, textNode);
 
-            // Add to the grid
+            // Add new representation to the grid
             gridPane.add(pane, newY, newX);
 
             System.out.println("Player " + player.getName() + " moved to " + newX + "," + newY);
@@ -506,29 +535,15 @@ public class Maze {
 
                     System.out.println("Received: " + message);
 
-                    if (messageType.equals("movePlayer")) {
-                        handleMovePlayerMessage(parts);
-                    }
-                    else if (messageType.equals("newPlayer")) {
-                        handleNewPlayerMessage(parts);
-                    }
-                    else if (messageType.equals("sizeOfPlayersIs")) {
-                        handlePlayerCountMessage(parts);
-                    }
-                    else if (messageType.equals("gameOver")) {
-                        handleGameOverMessage(parts);
-                    }
-                    else if (messageType.equals("flagCaptured")) {
-                        handleFlagCapturedMessage(parts);
-                    }
-                    else if (messageType.equals("lockFlag")) {
-                        handleLockFlagMessage(parts);
-                    }
-                    else if (messageType.equals("sendingPlayer")) {
-                        handlePlayerUpdateMessage(parts);
-                    }
-                    else if (messageType.equals("playerLeft")) {
-                        handlePlayerLeftMessage(parts);
+                    switch (messageType) {
+                        case "movePlayer" -> handleMovePlayerMessage(parts);
+                        case "newPlayer" -> handleNewPlayerMessage(parts);
+                        case "sizeOfPlayersIs" -> handlePlayerCountMessage(parts);
+                        case "gameOver" -> handleGameOverMessage(parts);
+                        case "flagCaptured" -> handleFlagCapturedMessage(parts);
+                        case "lockFlag" -> handleLockFlagMessage(parts);
+                        case "sendingPlayer" -> handlePlayerUpdateMessage(parts);
+                        case "playerLeft" -> handlePlayerLeftMessage(parts);
                     }
                 }
             } catch (IOException e) {
@@ -538,10 +553,12 @@ public class Maze {
     }
 
     /**
-     * Handle move player message from server
+     * Handles movePlayer message from server
+     * @param parts The complete message received from the server
      */
     private void handleMovePlayerMessage(String[] parts) {
 
+        // movePlayer <player name> <newX> <newY>
         if (parts.length >= 4) {
             String playerName = parts[1];
             int newX = Integer.parseInt(parts[2]);
@@ -581,10 +598,11 @@ public class Maze {
     }
 
     /**
-     * Handle new player message from server
+     * Handle newPlayer message from server
+     * @param parts The complete message received from the server
      */
     private void handleNewPlayerMessage(String[] parts) {
-        // Format: newPlayer <team> <x> <y> <name>
+        // newPlayer <team> <x> <y> <name>
         if (parts.length >= 5) {
             String team = parts[1];
             int x = Integer.parseInt(parts[2]);
@@ -601,75 +619,49 @@ public class Maze {
     }
 
     /**
-     * Check if a player already exists in our list
-     */
-    private boolean playerExists(String name) {
-        for (Player p : players) {
-            if (p.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Find a player by name
-     */
-    private Player findPlayerByName(String name) {
-        for (Player p : players) {
-            if (p.getName().equals(name)) {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Find a flag by name
-     */
-    private Flag findFlagByName(String name) {
-        for (Flag f : flags) {
-            if (f.getName().equals(name)) {
-                return f;
-            }
-        }
-        return null;
-    }
-
-
-
-    /**
-     * Handle player count message from server
+     * Handle sizeOfPlayerIs message from server
+     * @param parts The complete message received from the server
      */
     private void handlePlayerCountMessage(String[] parts) {
+
+        // sizeOfPlayerIs <number of players connected>
         if (parts.length >= 2) {
             int count = Integer.parseInt(parts[1]);
             Platform.runLater(() -> statusLabel.setText("Players: " + count));
         }
     }
 
+
     /**
-     * Handle game over message from server
+     * Handle gameOver message from server
+     * @param parts The complete message received from the server
      */
     private void handleGameOverMessage(String[] parts) {
+
+        // gameOver <winner name>
         String winner = parts.length > 1 ? parts[1] : "unknown";
         endGame(winner);
     }
 
     /**
-     * Handle flag captured message from server
+     * Handle flagCaptured message from server
+     * @param parts The complete message received from the server
      */
     private void handleFlagCapturedMessage(String[] parts) {
+
+        // flagCaptured <capturing player> <captured flag>
         if (parts.length >= 3) {
             String playerName = parts[1];
             String flagName = parts[2];
 
+            // Display the flag captured information
             Platform.runLater(() -> {
                 flagCaptureLabel.setText(playerName + " captured " + flagName);
                 Flag capturedFlag = findFlagByName(flagName);
                 if (capturedFlag != null) {
                     capturedFlag.setCaptured(true);
                 }
+
                 // Update flag counts
                 Player capturingPlayer = findPlayerByName(playerName);
                 if (capturingPlayer != null) {
@@ -685,27 +677,23 @@ public class Maze {
     }
 
     /**
-     * Handle lock flag message from server
+     * Handle lockFlag message from server
+     * @param parts The complete message received from the server
      */
     private void handleLockFlagMessage(String[] parts) {
-        if (parts.length >= 2) {
-            String flagName = parts[1];
 
-            if (flagName.equals(flags.get(0).getName())) {
-                flags.get(0).setCaptured(true);
-            } else if (flagName.equals(flags.get(1).getName())) {
-                flags.get(1).setCaptured(true);
-            } else if (flagName.equals(flags.get(2).getName())) {
-                flags.get(2).setCaptured(true);
-            }
+        // lockFlag <flag name>
+        if (parts.length >= 2) {
+            Objects.requireNonNull(findFlagByName(parts[1])).setCaptured(true);
         }
     }
 
     /**
-     * Handle player update message from server
+     * Handle sendingPlayer message from server
+     * @param parts The complete message received from the server
      */
     private void handlePlayerUpdateMessage(String[] parts) {
-        // Format: sendingPlayer <name> <team> <x> <y>
+        // sendingPlayer <name> <team> <x> <y>
         if (parts.length >= 5) {
             String playerName = parts[1];
             String team = parts[2];
@@ -734,8 +722,11 @@ public class Maze {
 
     /**
      * Handle player left message from server
+     * @param parts The complete message received from the server
      */
     private void handlePlayerLeftMessage(String[] parts) {
+
+        // playerLeft <player name>
         if (parts.length >= 2) {
             String playerName = parts[1];
 
@@ -754,40 +745,83 @@ public class Maze {
         }
     }
 
-    /**
-     * Add a player to the UI
-     */
-    private void addPlayerToUI(String playerName, String team, int x, int y) {
-        // Create new player object if it doesn't exist
-        Player player = findPlayerByName(playerName);
-        if (player == null) {
-            player = new Player(team, x, y, playerName);
-            players.add(player);
-        } else {
-            // Update existing player's position
-            player.setX(x);
-            player.setY(y);
-        }
-
-        // Create visual representation
-        Rectangle rect = new Rectangle(30, 30);
-        rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
-        rect.setStroke(Color.GRAY);
-
-        Text textNode = new Text(playerName);
-        textNode.setFill(Color.WHITE);
-
-        // Stack them together
-        StackPane pane = new StackPane(rect, textNode);
-
-        // Add to grid
-        gridPane.add(pane, y, x);
-    }
 
     /**
      * Request current player count from server
      */
     private void getNumberOfPlayers() {
         out.println("tellMeTheCurrentPlayers");
+    }
+
+    /**
+     * Helper method to check if a player exists in the game.
+     * @param name The name of the player to lookup
+     * @return true if the player already exist, false otherwise
+     */
+    private boolean playerExists(String name) {
+        for (Player p : players) {
+            if (p.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Helper method to find an existing player in the game
+     * @param name the name of the player to find
+     * @return the player if it exists, null otherwise
+     */
+    private Player findPlayerByName(String name) {
+        for (Player p : players) {
+            if (p.getName().equals(name)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper method to find an existing flag in the game
+     * @param name the name of the flag to find
+     * @return the flag if it exists, null otherwise
+     */
+    private Flag findFlagByName(String name) {
+        for (Flag f : flags) {
+            if (f.getName().equals(name)) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    /** Helper method to verify whether a flag exists at position (x ,y) and if it is
+     * captured or not.
+     * @param x The x co-ordinate
+     * @param y The y co-ordinate
+     *
+     * @return true if an uncaptured flag is present at the given position, false otherwise.
+     */
+    private boolean checkForUncapturedFlagAtPosition(int x, int y) {
+        for (Flag flag : flags) {
+            if (flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
+                capturePromptLabel.setVisible(true);
+                return true;
+            }
+        }
+        capturePromptLabel.setVisible(false);
+        return false;
+    }
+
+    /**
+     * End the game and show results
+     * @param winner A string with the name of the winning team
+     */
+    private void endGame(String winner) {
+        Platform.runLater(() -> {
+            Stage resultStage = new Stage();
+            Results results = new Results(resultStage, winner);
+            results.showResults();
+        });
     }
 }
