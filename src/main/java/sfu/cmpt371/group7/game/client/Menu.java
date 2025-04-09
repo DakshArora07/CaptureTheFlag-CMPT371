@@ -160,7 +160,7 @@ public class Menu extends Application {
             }
 
             try {
-                new Console(ip, Integer.parseInt(numPlayers));
+                new Console(ip, 1);
                 joinStage.close();
                 stage.close();
             } catch (Exception ex) {

@@ -489,7 +489,7 @@ public class Server {
                     double MIN_CAPTURE_DURATION = 3;
                     //:TODO change to 5.5
                     double MAX_CAPTURE_DURATION = 6;
-                    if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION) {
+                    if (duration >= MIN_CAPTURE_DURATION && duration <= MAX_CAPTURE_DURATION && !flagToCapture.isCaptured()) {
                         // Successful capture
                         flagToCapture.setCaptured(true);
                         broadcast("flagCaptured " + playerName + " " + flagName);
