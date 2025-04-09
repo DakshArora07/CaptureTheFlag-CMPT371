@@ -3,6 +3,7 @@ package sfu.cmpt371.group7.game.server;
 import io.github.cdimascio.dotenv.Dotenv;
 import sfu.cmpt371.group7.game.model.Flag;
 import sfu.cmpt371.group7.game.model.Player;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -372,7 +373,7 @@ public class Server {
             if (parts.length >= NUM_FLAGS * 2 + 1) {
                 try {
                     for (int i = 0; i < NUM_FLAGS; i++) {
-                        flags.add(new Flag(Integer.parseInt(parts[2*i+1]), Integer.parseInt(parts[2*i+2]), "flag" + (i+1)));
+                        flags.add(new Flag(Integer.parseInt(parts[2 * i + 1]), Integer.parseInt(parts[2 * i + 2]), "flag" + (i + 1)));
                     }
                     System.out.println("Flag coordinates set");
                 } catch (Exception e) {
@@ -448,16 +449,23 @@ public class Server {
             }
         }
 
-        private void handleCaptureDuration (String[] parts) {
+        private void handleCaptureDuration(String[] parts) {
 
             // captureDuration <player name> <flag name> <time (sec)>
 
             if (parts.length >= 4) {
                 if (Double.parseDouble(parts[3]) >= MIN_CAPTURE_DURATION && Double.parseDouble(parts[3]) <= MAX_CAPTURE_DURATION) {
                     Flag f = findFlagByName(parts[2]);
+                    Player p = findPlayerByName(parts[1]);
                     if (f != null) {
                         f.setCaptured(true);
-                        broadcast("flagCaptured " + parts[1] + " " + f.getName());
+                        broadcast("flagCaptured " + parts[1] + " " + parts[2]);
+                        if (p.getTeam().equals("red")) {
+                            redFlagCount++;
+                        } else {
+                            blueFlagCount++;
+                        }
+                        checkWinCondition();
                     }
                 }
             }
