@@ -202,7 +202,7 @@ public class Maze {
         gridPane.setPadding(new Insets(5));
         gridPane.setHgap(1);
         gridPane.setVgap(1);
-        int numFlags = 0;
+        int numFlags = 1;
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
                 Rectangle rect = new Rectangle(30, 30);
@@ -257,6 +257,7 @@ public class Maze {
         timerLabel = new Label("Time left:  3:00");
         timerLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dd3333; -fx-font-weight: bold;");
         startTimer();
+        timerLabel.setVisible(false);
 
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
@@ -353,6 +354,7 @@ public class Maze {
 
     private boolean checkForUncapturedFlagAtPosition(int x, int y) {
         for (Flag flag : flags) {
+
             if (flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
                 capturePromptLabel.setVisible(true);
                 return true;
@@ -622,6 +624,18 @@ public class Maze {
         return null;
     }
 
+    /**
+     * Find a flag by name
+     */
+    private Flag findFlagByName(String name) {
+        for (Flag f : flags) {
+            if (f.getName().equals(name)) {
+                return f;
+            }
+        }
+        return null;
+    }
+
 
 
     /**
@@ -652,7 +666,10 @@ public class Maze {
 
             Platform.runLater(() -> {
                 flagCaptureLabel.setText(playerName + " captured " + flagName);
-
+                Flag capturedFlag = findFlagByName(flagName);
+                if (capturedFlag != null) {
+                    capturedFlag.setCaptured(true);
+                }
                 // Update flag counts
                 Player capturingPlayer = findPlayerByName(playerName);
                 if (capturingPlayer != null) {
