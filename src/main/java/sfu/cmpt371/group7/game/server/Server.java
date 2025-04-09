@@ -3,7 +3,6 @@ package sfu.cmpt371.group7.game.server;
 import io.github.cdimascio.dotenv.Dotenv;
 import sfu.cmpt371.group7.game.model.Flag;
 import sfu.cmpt371.group7.game.model.Player;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,6 +11,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import static java.lang.System.exit;
@@ -29,10 +29,11 @@ public class Server {
     private static final int PORT = Integer.parseInt(dotenv.get("PORT_NUMBER"));
     private static final int MIN_PLAYERS = Integer.parseInt(dotenv.get("MIN_PLAYERS"));
     private final int NUM_FLAGS = 7;
-    private List<ClientHandler> clients = new ArrayList<>();
+    private final double MIN_CAPTURE_DURATION = 4.5;
+    private final double MAX_CAPTURE_DURATION = 5.2;
+    private final List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;
     private boolean gameStarted = false;
-    private final Random random = new Random();
     private final List<Player> PLAYERS = new ArrayList<>();
     private final List<Flag> flags = new ArrayList<>();
     private int redFlagCount = 0;
@@ -103,27 +104,27 @@ public class Server {
      * the red flag count and the blue flag count is also increased
      */
 
-    private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
-
-        Player player = findPlayerByName(name);
-        assert player != null;
-
-        for (Flag flag : flags) {
-            if (flag != null && flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
-                flag.setCaptured(true);
-                broadcast("flagCaptured " + name + " " + flag.getName());
-                broadcast("lockFlag " + flag.getName());
-                if (player.getTeam().equals("red")) {
-                    redFlagCount++;
-                } else {
-                    blueFlagCount++;
-                }
-                checkWinCondition();
-                return true;
-            }
-        }
-        return false;
-    }
+//    private boolean checkIfPlayerCapturedFlag(String name, int x, int y) {
+//
+//        Player player = findPlayerByName(name);
+//        assert player != null;
+//
+//        for (Flag flag : flags) {
+//            if (flag != null && flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
+//                flag.setCaptured(true);
+//                broadcast("flagCaptured " + name + " " + flag.getName());
+//                broadcast("lockFlag " + flag.getName());
+//                if (player.getTeam().equals("red")) {
+//                    redFlagCount++;
+//                } else {
+//                    blueFlagCount++;
+//                }
+//                checkWinCondition();
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
     /**
      * find a player by their name
@@ -132,6 +133,18 @@ public class Server {
         for (Player player : PLAYERS) {
             if (player.getName().equals(name)) {
                 return player;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * find a flag by its name
+     */
+    private Flag findFlagByName(String name) {
+        for (Flag f : flags) {
+            if (f.getName().equals(name)) {
+                return f;
             }
         }
         return null;
@@ -214,6 +227,9 @@ public class Server {
                         case "gameOver":
                             handleGameOver(parts);
                             break;
+                        case "captureDuration":
+                            handleCaptureDuration(parts);
+                            break;
                         default:
                             System.out.println("i dont know what you mean. when you wanna say less but you wanna say no" + messageType);
                             break;
@@ -228,7 +244,7 @@ public class Server {
 
         /**
          * handle team selection message
-         * place the red team players in left side and blue team players in the right side
+         * place the red team players in left side and blue team players on the right side
          */
         private void handleTeamSelection(String[] parts) {
             if (parts.length >= 3) {
@@ -237,6 +253,7 @@ public class Server {
                 this.playerName = playerName;
 
                 int x, y;
+                Random random = new Random();
                 if (team.equals("red")) {
                     x = random.nextInt(5) + 1;
                     y = 0;
@@ -296,7 +313,7 @@ public class Server {
 
                 updatePlayerPosition(playerName, x, y);
 
-                checkIfPlayerCapturedFlag(playerName, x, y);
+                //checkIfPlayerCapturedFlag(playerName, x, y);
 
                 String moveMessage = "movePlayer " + playerName + " " + x + " " + y;
                 broadcast(moveMessage);
@@ -429,6 +446,22 @@ public class Server {
                 System.err.println("Error closing client connection: " + e.getMessage());
                 e.printStackTrace();
             }
+        }
+
+        private void handleCaptureDuration (String[] parts) {
+
+            // captureDuration <player name> <flag name> <time (sec)>
+
+            if (parts.length >= 4) {
+                if (Double.parseDouble(parts[3]) >= MIN_CAPTURE_DURATION && Double.parseDouble(parts[3]) <= MAX_CAPTURE_DURATION) {
+                    Flag f = findFlagByName(parts[2]);
+                    if (f != null) {
+                        f.setCaptured(true);
+                        broadcast("flagCaptured " + parts[1] + " " + f.getName());
+                    }
+                }
+            }
+
         }
     }
 

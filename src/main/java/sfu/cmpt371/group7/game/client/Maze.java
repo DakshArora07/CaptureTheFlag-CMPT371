@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The maze class represents the main gameplay area in the Capture the Flag game.
@@ -323,6 +324,7 @@ public class Maze {
      */
     private void setupKeyboardControls(Scene scene) {
 
+        AtomicReference<Flag> f = new AtomicReference<>();
         scene.setOnKeyPressed(event -> {
             if (localPlayer != null) {
                 int newX = localPlayer.getX();
@@ -359,7 +361,7 @@ public class Maze {
                 }
 
                 // Start capturing when C is pressed and player is on a flag
-                else if (event.getCode() == KeyCode.C && checkForUncapturedFlagAtPosition(newX, newY)) {
+                else if (event.getCode() == KeyCode.C && getUncapturedFlagAtPosition(newX, newY) != null) {
 
                     if (captureStartTime == -1) {
                         captureStartTime = System.currentTimeMillis();
@@ -370,17 +372,19 @@ public class Maze {
                 if (hasMoved) {
                     localPlayer.setX(newX);
                     localPlayer.setY(newY);
-                    checkForUncapturedFlagAtPosition(newX, newY);
+                    if (getUncapturedFlagAtPosition(newX, newY) != null) {
+                        f.set(getUncapturedFlagAtPosition(newX, newY));
+                    }
                     out.println("movePlayer " + localPlayer.getName() + " " + newX + " " + newY);
                 }
             }
         });
 
         scene.setOnKeyReleased(event -> {
-            if (event.getCode() == KeyCode.C) {
-
+            if (event.getCode() == KeyCode.C && getUncapturedFlagAtPosition(localPlayer.getX(), localPlayer.getY()) != null) {
                 long captureDuration = System.currentTimeMillis() - captureStartTime;
                 System.out.println("C pressed for " + captureDuration/1000.0 + " seconds");
+                out.println("captureDuration " + localPlayer.getName() + " " + f.get().getName() + " " + captureDuration/1000.0);
                 captureStartTime = -1;
             }
         });
@@ -448,13 +452,6 @@ public class Maze {
         // Check if cell is a barrier
         if (grid[newX][newY] == 1) {
             return false;
-        }
-
-        // Allows multiple players to be on a flag cell together.
-        for (Flag flag : flags) {
-            if (flag.getX() == newX && flag.getY() == newY) {
-                return true;
-            }
         }
 
         // Check if cell is occupied by another player
@@ -806,15 +803,15 @@ public class Maze {
      *
      * @return true if an uncaptured flag is present at the given position, false otherwise.
      */
-    private boolean checkForUncapturedFlagAtPosition(int x, int y) {
+    private Flag getUncapturedFlagAtPosition(int x, int y) {
         for (Flag flag : flags) {
             if (flag.getX() == x && flag.getY() == y && !flag.isCaptured()) {
                 capturePromptLabel.setVisible(true);
-                return true;
+                return flag;
             }
         }
         capturePromptLabel.setVisible(false);
-        return false;
+        return null;
     }
 
     /**
