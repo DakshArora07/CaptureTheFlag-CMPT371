@@ -30,6 +30,18 @@ public class Server {
     private int redTeamCount = 0;
     private int blueTeamCount = 0;
 
+    private final int RED_1_X = 2;
+    private final int RED_1_Y = 0;
+
+    private final int RED_2_X = 17;
+    private final int RED_2_Y = 0;
+
+    private final int BLUE_1_X = 2;
+    private final int BLUE_1_Y = 19;
+
+    private final int BLUE_2_X = 17;
+    private final int BLUE_2_Y = 19;
+
     public Server() {
         System.out.println("Server starting on port " + PORT);
     }
@@ -220,22 +232,22 @@ public class Server {
             if (player.getTeam().equals("red")) {
                 if(isNoPlayerAtPosition(2, 0)) {
                     System.out.println("spawning at 0,2");
-                    spawnX = 2;
-                    spawnY = 0;
+                    spawnX = RED_1_X;
+                    spawnY = RED_1_Y;
                 } else if(isNoPlayerAtPosition(3, 0)){
                     System.out.println("spawning at 0,3");
-                    spawnX = 3;
-                    spawnY = 0;
+                    spawnX = RED_2_X;
+                    spawnY = RED_2_Y;
                 }
             } else {
                 if(isNoPlayerAtPosition(2, 19)) {
                     System.out.println("spawning at 2,19");
-                    spawnX = 2;
-                    spawnY = 19;
+                    spawnX = BLUE_1_X;
+                    spawnY = BLUE_1_Y;
                 } else if(isNoPlayerAtPosition(3, 19)){
                     System.out.println("spawning at 3,19");
-                    spawnX = 3;
-                    spawnY = 19;
+                    spawnX = BLUE_2_X;
+                    spawnY = BLUE_2_Y;
                 }
             }
 
@@ -263,21 +275,21 @@ public class Server {
                 int x, y;
                 if (team.equals("red")) {
                     if(redTeamCount== 0){
-                        x = 2;
+                        x = RED_1_X;
                     }
                     else{
-                        x = 3;
+                        x = RED_2_X;
                     }
-                    y = 0;
+                    y = RED_1_Y;
                     redTeamCount++;
                 } else {
                     if(blueTeamCount == 0){
-                        x = 2;
+                        x = BLUE_1_X;
                     }
                     else{
-                        x = 3;
+                        x = BLUE_2_X;
                     }
-                    y = 19;
+                    y = BLUE_1_Y;
                     blueTeamCount++;
                 }
 
