@@ -6,9 +6,6 @@ package sfu.cmpt371.group7.game.model;
  * Each player belongs to a team, has a name, coordinates in the maze,
  * and tracks whether they are holding a captured flag or currently
  * attempting to capture one.
- *
- * @author Kabir Singh Sidhu
- * @version 1.0
  */
 public class Player {
 

@@ -38,9 +38,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @see Flag
  * @see Player
  * @see Results
- *
- * @author Group 7
- * @version 1.0
  */
 
 public class Maze {
