@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -25,26 +26,29 @@ public class Menu extends Application {
 
         VBox root = setupRoot();
 
-        Label titleLabel = setupTitleLabel();
+        //Label titleLabel = setupTitleLabel();
 
         // New Game Button
         Button newGameButton = new Button("NEW GAME");
-        styleButton(newGameButton, "#27ae60", "#1e8449");
+        styleButton(newGameButton, "#1FB6FF", "#009EE0");
+        newGameButton.setEffect(new GaussianBlur(10));
+
 
         // Join Game Button
         Button joinGameButton = new Button("JOIN GAME");
-        styleButton(joinGameButton, "#2980b9", "#2471a3");
+        styleButton(joinGameButton, "#FF1744", "#D50032");
+        joinGameButton.setEffect(new GaussianBlur(10));
 
         newGameButton.setOnAction(e -> showNewGameDialog(primaryStage));
         joinGameButton.setOnAction(e -> showJoinGameDialog(primaryStage));
 
-        root.getChildren().addAll(titleLabel, newGameButton, joinGameButton);
+        root.getChildren().addAll(newGameButton, joinGameButton);
 
         setupScene(primaryStage, root);
     }
 
     public static void setupScene(Stage primaryStage, VBox root) {
-        Scene scene = new Scene(root, 500, 470);
+        Scene scene = new Scene(root, 500, 490);
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.centerOnScreen();
@@ -67,7 +71,14 @@ public class Menu extends Application {
     public static VBox setupRoot() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(30));
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); -fx-background-radius: 8;");
+        //root.setStyle("-fx-background-color: linear-gradient(to bottom, #2c3e50, #34495e); -fx-background-radius: 8;");
+        root.setBackground(new Background(new BackgroundImage(
+                new Image(Objects.requireNonNull(Menu.class.getResourceAsStream("/sfu/cmpt371/group7/game/BackgroundImage.png"))),
+                null,
+                null,
+                BackgroundPosition.CENTER,
+                null
+        )));
         root.setAlignment(Pos.CENTER);
 
         return root;

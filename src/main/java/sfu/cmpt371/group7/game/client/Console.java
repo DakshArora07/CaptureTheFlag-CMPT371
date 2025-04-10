@@ -7,8 +7,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -161,9 +161,10 @@ public class Console {
         VBox root = setupRoot();
 
         // Game title
-        Label titleLabel = setupTitleLabel();
+        //Label titleLabel = setupTitleLabel();
 
         // Player counter with styled box
+
         HBox counterBox = new HBox(10);
         counterBox.setAlignment(Pos.CENTER);
         counterBox.setPadding(new Insets(10, 20, 10, 20));
@@ -308,7 +309,8 @@ public class Console {
         waitingBox.getChildren().addAll(waitingIndicator, waitingLabel);
 
         // Add all elements to root
-        root.getChildren().addAll(titleLabel, counterBox, nameSection, buttonBox, instructionsBox, waitingBox);
+        root.getChildren().addAll(counterBox, nameSection, buttonBox, instructionsBox, waitingBox);
+        root.setPadding(new Insets(130,30,0,30));
 
         // Create scene
         setupScene(primaryStage, root);
