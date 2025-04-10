@@ -1,12 +1,11 @@
 package sfu.cmpt371.group7.game.client;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
@@ -14,7 +13,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import sfu.cmpt371.group7.game.model.Flag;
 import sfu.cmpt371.group7.game.model.Player;
 
@@ -26,7 +24,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The maze class represents the main gameplay area in the Capture the Flag game.
@@ -80,9 +77,6 @@ public class Maze {
 
     /** Label displaying player count status */
     private Label statusLabel;
-
-    /** Label displaying the remaining time in the game */
-    private Label timerLabel;
 
     /** Label displaying the total flags captured by each team */
     private Label flagCountLabel;
@@ -171,7 +165,7 @@ public class Maze {
         listenForServerMessages();
 
         // Create scene with keyboard controls
-        Scene scene = new Scene(root, 800, 800);
+        Scene scene = new Scene(root, 750, 600);
         setupKeyboardControls(scene);
 
         // Configure and show the stage
@@ -179,6 +173,17 @@ public class Maze {
         stage.setScene(scene);
         stage.setResizable(false);
         stage.centerOnScreen();
+        stage.setOnCloseRequest(e -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to exit?", ButtonType.YES, ButtonType.NO);
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
+                    System.exit(0);
+                }
+                if (response == ButtonType.NO) {
+                    e.consume();
+                }
+            });
+        });
         stage.show();
     }
 
@@ -189,13 +194,12 @@ public class Maze {
 
         // Draw the maze in a grid pane
         gridPane = new GridPane();
-        gridPane.setPadding(new Insets(5));
         gridPane.setHgap(1);
         gridPane.setVgap(1);
         int numFlags = 1;
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
-                Rectangle rect = new Rectangle(30, 30);
+                Rectangle rect = new Rectangle(25, 25);
                 if (grid[i][j] == 1) {
                     rect.setFill(Color.BLACK);
                 } else if(grid[i][j] == 2) {
@@ -223,18 +227,10 @@ public class Maze {
         capturePromptLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
         capturePromptLabel.setVisible(false);
 
-        // Create exit button
-        Button exitButton = new Button("Exit");
-        exitButton.setStyle("-fx-background-color: #ff0000; -fx-text-fill: white;");
-        exitButton.setOnAction(e -> {
-            assert localPlayer != null;
-            out.println("exitGame " + localPlayer.getName());
-            System.exit(0);
-        });
-
         // Create a side panel displaying number of players, name of the local player and the exit button
         VBox sidePanel = new VBox(10);
-        sidePanel.setPadding(new Insets(10));
+        sidePanel.setPadding(new Insets(10, 20, 10, 20));
+
         sidePanel.setStyle("-fx-background-color: linear-gradient(to bottom, #eeeeee, #cccccc); "
                 + "-fx-border-color: gray; -fx-border-width: 1;");
         statusLabel = new Label("Players: 0");
@@ -244,13 +240,7 @@ public class Maze {
 
         statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
         name.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
-        sidePanel.getChildren().addAll(statusLabel, name, exitButton, flagCountLabel, flagCaptureLabel);
-
-        // Create timer
-        timerLabel = new Label("Time left:  3:00");
-        timerLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dd3333; -fx-font-weight: bold;");
-        startTimer();
-        timerLabel.setVisible(false);
+        sidePanel.getChildren().addAll(statusLabel, name, flagCountLabel, flagCaptureLabel);
 
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
@@ -258,7 +248,7 @@ public class Maze {
 
         VBox centerBox = new VBox(5);
         centerBox.setAlignment(Pos.CENTER);
-        centerBox.getChildren().addAll(timerLabel, capturePromptLabel);
+        centerBox.getChildren().addAll(capturePromptLabel);
         topPane.setCenter(centerBox);
 
         topPane.setRight(new Label(" "));
@@ -266,10 +256,10 @@ public class Maze {
 
         // Assemble main layout in the root container
         root = new BorderPane();
+        root.setPadding(new Insets(10));
         root.setTop(topPane);
         root.setRight(sidePanel);
         root.setCenter(gridPane);
-
     }
 
     /**
@@ -288,7 +278,7 @@ public class Maze {
         }
 
         // Create visual representation
-        Rectangle rect = new Rectangle(30, 30);
+        Rectangle rect = new Rectangle(25, 25);
         rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
         rect.setStroke(Color.GRAY);
 
@@ -312,7 +302,6 @@ public class Maze {
      */
     private void setupKeyboardControls(Scene scene) {
 
-        AtomicReference<Flag> f = new AtomicReference<>();
         scene.setOnKeyPressed(event -> {
             if (localPlayer != null) {
                 int newX = localPlayer.getX();
@@ -362,7 +351,6 @@ public class Maze {
                     localPlayer.setX(newX);
                     localPlayer.setY(newY);
                     if (getUncapturedFlagAtPosition(newX, newY) != null) {
-                        f.set(getUncapturedFlagAtPosition(newX, newY));
                         capturePromptLabel.setVisible(true);
                         capturePromptLabel.setText("Hold C to capture the flag!");
                     } else {
@@ -387,46 +375,6 @@ public class Maze {
                 }
             }
         });
-    }
-
-    /**
-     * Starts the game timer of 3 minutes
-     */
-    private void startTimer() {
-        // 3 minutes time
-        final int totalTime = 180;
-        final Timeline[] timelineRef = new Timeline[1];
-
-        timerLabel.setText(String.format("Time left: %d:%02d", totalTime / 60, totalTime % 60));
-
-        // Create the timeline with access to the reference
-        timelineRef[0] = new Timeline(
-                new KeyFrame(Duration.seconds(1), event -> {
-                    String currentText = timerLabel.getText().replace("Time left: ", "");
-                    String[] parts = currentText.split(":");
-
-                    try {
-                        int minutes = Integer.parseInt(parts[0].trim());
-                        int seconds = Integer.parseInt(parts[1].trim());
-                        int totalSeconds = minutes * 60 + seconds;
-                        totalSeconds = Math.max(totalSeconds - 1, 0);
-
-                        int newMin = totalSeconds / 60;
-                        int newSec = totalSeconds % 60;
-                        timerLabel.setText(String.format("Time left: %d:%02d", newMin, newSec));
-
-                        if (totalSeconds == 0) {
-                            timelineRef[0].stop();
-                            out.println("gameOver");
-                        }
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error parsing time: " + e.getMessage());
-                    }
-                })
-        );
-
-        timelineRef[0].setCycleCount(Timeline.INDEFINITE);
-        timelineRef[0].play();
     }
 
     /**
@@ -536,7 +484,7 @@ public class Maze {
             player.setY(newY);
 
             // Create a new player representation
-            Rectangle rect = new Rectangle(30, 30);
+            Rectangle rect = new Rectangle(25, 25);
             rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
             rect.setStroke(Color.GRAY);
 
