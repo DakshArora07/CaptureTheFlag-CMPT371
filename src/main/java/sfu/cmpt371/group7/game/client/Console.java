@@ -225,7 +225,7 @@ public class Console {
         redButton.setOnMouseExited(e -> redButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #e74c3c; " +
                 "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
         redButton.setOnAction(e -> {
-            String playerName = nameField.getText().trim();
+            String playerName = nameField.getText().trim().toUpperCase();
             if (validatePlayerName(playerName)) {
                 // Disable buttons to prevent multiple submissions
                 redButton.setDisable(true);
@@ -251,7 +251,7 @@ public class Console {
         blueButton.setOnMouseExited(e -> blueButton.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #3498db; " +
                 "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
         blueButton.setOnAction(e -> {
-            String playerName = nameField.getText().trim();
+            String playerName = nameField.getText().trim().toUpperCase();
             if (validatePlayerName(playerName)) {
                 // Disable buttons to prevent multiple submissions
                 redButton.setDisable(true);

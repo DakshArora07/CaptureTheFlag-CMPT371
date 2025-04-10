@@ -1,18 +1,27 @@
 package sfu.cmpt371.group7.game.client;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.InnerShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import sfu.cmpt371.group7.game.model.Flag;
 import sfu.cmpt371.group7.game.model.Player;
 
@@ -165,7 +174,7 @@ public class Maze {
         listenForServerMessages();
 
         // Create scene with keyboard controls
-        Scene scene = new Scene(root, 750, 600);
+        Scene scene = new Scene(root, 800, 650);
         setupKeyboardControls(scene);
 
         // Configure and show the stage
@@ -194,23 +203,56 @@ public class Maze {
 
         // Draw the maze in a grid pane
         gridPane = new GridPane();
-        gridPane.setHgap(1);
-        gridPane.setVgap(1);
+        gridPane.setHgap(2);
+        gridPane.setVgap(2);
+        gridPane.setPadding(new Insets(5));
+        gridPane.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+
         int numFlags = 1;
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
-                Rectangle rect = new Rectangle(25, 25);
                 if (grid[i][j] == 1) {
-                    rect.setFill(Color.BLACK);
-                } else if(grid[i][j] == 2) {
-                    rect.setFill(Color.YELLOW);
+                    // Wall cell: Set color to black
+                    Rectangle rect = new Rectangle(25, 25);
+                    rect.setFill(Color.rgb(50, 50, 50));
+                    rect.setArcHeight(5);
+                    rect.setArcWidth(5);
+                    rect.setStroke(Color.DARKGRAY);
+                    rect.setStrokeWidth(0.5);
+                    gridPane.add(rect, j, i);
+                } else if (grid[i][j] == 2) {
+                    // Flag cell: Load the flag image
                     flags.add(new Flag(i, j, "flag" + numFlags));
+                    Rectangle baseRect = new Rectangle(25, 25);
+                    baseRect.setFill(Color.WHITE);
+                    baseRect.setStroke(Color.DARKGRAY);
+                    baseRect.setStrokeWidth(0.5);
+                    StackPane flagCell = new StackPane(baseRect, render("flag"));
+                    gridPane.add(flagCell, j, i);
                     numFlags++;
+                } else if (grid[i][j] == 3) {
+                    Rectangle baseRect = new Rectangle(25, 25);
+                    baseRect.setFill(Color.WHITE);
+                    baseRect.setStroke(Color.DARKGRAY);
+                    baseRect.setStrokeWidth(0.5);
+                    StackPane flagCell = new StackPane(baseRect, render("redHome"));
+                    gridPane.add(flagCell, j, i);
+                } else if (grid[i][j] == 4) {
+                    Rectangle baseRect = new Rectangle(25, 25);
+                    baseRect.setFill(Color.WHITE);
+                    baseRect.setStroke(Color.DARKGRAY);
+                    baseRect.setStrokeWidth(0.5);
+                    StackPane flagCell = new StackPane(baseRect, render("blueHome"));
+                    gridPane.add(flagCell, j, i);
                 } else {
+                    // Empty cell
+                    Rectangle rect = new Rectangle(25, 25);
                     rect.setFill(Color.WHITE);
+                    rect.setEffect(new InnerShadow(2, Color.LIGHTGRAY));
+                    rect.setStroke(Color.DARKGRAY);
+                    rect.setStrokeWidth(0.5);
+                    gridPane.add(rect, j, i);
                 }
-                rect.setStroke(Color.GRAY);
-                gridPane.add(rect, j, i);
             }
         }
 
@@ -221,26 +263,47 @@ public class Maze {
 
         // Fill out the information in all the labels
         flagCountLabel = new Label("Red: " + redFlagCount + " Blue: " + blueFlagCount);
+        flagCountLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #333333; -fx-font-weight: bold;");
+
         flagCaptureLabel = new Label("No flags captured yet");
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
+
         capturePromptLabel = new Label();
-        capturePromptLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
+        capturePromptLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #d32f2f; -fx-font-weight: bold;");
         capturePromptLabel.setVisible(false);
 
         // Create a side panel displaying number of players, name of the local player and the exit button
-        VBox sidePanel = new VBox(10);
-        sidePanel.setPadding(new Insets(10, 20, 10, 20));
+        VBox sidePanel = new VBox(15);
+        sidePanel.setPadding(new Insets(15, 25, 15, 25));
+        sidePanel.setAlignment(Pos.TOP_CENTER);
 
-        sidePanel.setStyle("-fx-background-color: linear-gradient(to bottom, #eeeeee, #cccccc); "
-                + "-fx-border-color: gray; -fx-border-width: 1;");
+        sidePanel.setStyle("-fx-background-color: linear-gradient(to bottom, #f8f8f8, #e0e0e0); "
+                + "-fx-border-color: #bdbdbd; -fx-border-width: 1; -fx-border-radius: 5;");
+
         statusLabel = new Label("Players: 0");
 
         assert localPlayer != null;
-        Label name = new Label("Name: " + localPlayer.getName());
+        Label nameLabel = new Label("Name: " + localPlayer.getName());
+        Label teamLabel = new Label("Team: " + localPlayer.getTeam().toUpperCase());
+
+        String teamColor = localPlayer.getTeam().equals("red") ? "#d32f2f" : "#1976d2";
+        teamLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + teamColor + "; -fx-font-weight: bold;");
 
         statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
-        name.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
-        sidePanel.getChildren().addAll(statusLabel, name, flagCountLabel, flagCaptureLabel);
+        nameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-font-weight: bold;");
+
+        // Score section
+        Label scoreTitle = new Label("SCORE");
+        scoreTitle.setStyle("-fx-font-size: 16px; -fx-text-fill: #333333; -fx-font-weight: bold; -fx-padding: 15 0 5 0;");
+
+        sidePanel.getChildren().addAll(
+                statusLabel,
+                nameLabel,
+                teamLabel,
+                scoreTitle,
+                flagCountLabel,
+                flagCaptureLabel
+        );
 
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
@@ -256,10 +319,35 @@ public class Maze {
 
         // Assemble main layout in the root container
         root = new BorderPane();
-        root.setPadding(new Insets(10));
+        root.setPadding(new Insets(15));
+        root.setStyle("-fx-background-color: #f5f5f5;");
         root.setTop(topPane);
         root.setRight(sidePanel);
         root.setCenter(gridPane);
+    }
+
+    private ImageView render (String type) {
+
+        Image image = null;
+        switch (type) {
+            case "redHome" -> image = new Image(
+                    Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/redHome.png")));
+            case "blueHome" -> image = new Image(
+                    Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/blueHome.png")));
+            case "flag" -> image = new Image(
+                    Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/flag.png")));
+            case "blueFlag" -> image = new Image(
+                    Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/blueFlag.png")));
+            case "redFlag" -> image = new Image(
+                    Objects.requireNonNull(getClass().getResourceAsStream("/sfu/cmpt371/group7/game/redFlag.png")));
+        }
+
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(20);
+        imageView.setFitHeight(20);
+        imageView.setPreserveRatio(true);
+
+        return imageView;
     }
 
     /**
@@ -452,7 +540,7 @@ public class Maze {
         int flagY = capturedFlag.getY();
 
         Platform.runLater(() -> {
-            for (javafx.scene.Node node : gridPane.getChildren()) {
+            for (Node node : gridPane.getChildren()) {
                 if (GridPane.getRowIndex(node) == flagX && GridPane.getColumnIndex(node) == flagY &&
                         node instanceof Rectangle) {
                     ((Rectangle) node).setFill(Color.GREY);
@@ -484,15 +572,36 @@ public class Maze {
             player.setY(newY);
 
             // Create a new player representation
-            Rectangle rect = new Rectangle(25, 25);
-            rect.setFill(player.getTeam().equals("red") ? Color.RED : Color.BLUE);
-            rect.setStroke(Color.GRAY);
+            Rectangle rect = new Rectangle(22, 22);
+
+            Color teamColor = player.getTeam().equals("red") ? Color.rgb(211, 47, 47) : Color.rgb(25, 118, 210);
+            rect.setFill(teamColor);
+            rect.setStroke(Color.WHITE);
+            rect.setStrokeWidth(1.5);
+            rect.setArcHeight(10);
+            rect.setArcWidth(10);
+
+            // Add glow effect for the local player
+            if (player.getName().equals(localPlayer.getName())) {
+                DropShadow glow = new DropShadow();
+                glow.setColor(teamColor);
+                glow.setRadius(10);
+                rect.setEffect(glow);
+            }
 
             Text textNode = new Text(player.getName());
             textNode.setFill(Color.WHITE);
+            textNode.setFont(Font.font("System", FontWeight.BOLD, 10));
+            textNode.setEffect(new DropShadow(2, Color.BLACK));
 
             // Stack them together
             StackPane pane = new StackPane(rect, textNode);
+
+            // Add a subtle animation effect
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(200), pane);
+            fadeIn.setFromValue(0.3);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
 
             // Add new representation to the grid
             gridPane.add(pane, newY, newX);
@@ -659,10 +768,18 @@ public class Maze {
                 // Update flag counts
                 Player capturingPlayer = findPlayerByName(playerName);
                 if (capturingPlayer != null) {
+                    Rectangle baseRect = new Rectangle(25, 25);
+                    baseRect.setFill(Color.LIGHTGRAY);
+                    baseRect.setStroke(Color.DARKGRAY);
+                    baseRect.setStrokeWidth(0.5);
                     if (capturingPlayer.getTeam().equals("red")) {
                         redFlagCount++;
+                        StackPane flagCell = new StackPane(baseRect, render("redFlag"));
+                        gridPane.add(flagCell, capturedFlag.getY(), capturedFlag.getX());
                     } else {
                         blueFlagCount++;
+                        StackPane flagCell = new StackPane(baseRect, render("blueFlag"));
+                        gridPane.add(flagCell, capturedFlag.getY(), capturedFlag.getX());
                     }
                     flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
                     capturePromptLabel.setVisible(true);
