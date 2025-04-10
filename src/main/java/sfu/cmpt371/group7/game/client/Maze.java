@@ -178,8 +178,9 @@ public class Maze {
         setupKeyboardControls(scene);
 
         // Configure and show the stage
-        stage.setTitle("Maze");
+        stage.setTitle("Capture the Flag");
         stage.setScene(scene);
+        stage.getIcons().add(new Image(Objects.requireNonNull(Menu.class.getResourceAsStream("/sfu/cmpt371/group7/game/gameIcon.png"))));
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.setOnCloseRequest(e -> {
@@ -269,7 +270,11 @@ public class Maze {
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
 
         capturePromptLabel = new Label();
-        capturePromptLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #d32f2f; -fx-font-weight: bold;");
+        if (localPlayer.getTeam().toLowerCase().equals("red")) {
+            capturePromptLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #d32f2f; -fx-font-weight: bold;");
+        } else if (localPlayer.getTeam().toLowerCase().equals("blue")) {
+            capturePromptLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #00008a; -fx-font-weight: bold;");
+        }
         capturePromptLabel.setVisible(false);
 
         // Create a side panel displaying number of players, name of the local player and the exit button
@@ -301,9 +306,10 @@ public class Maze {
                 nameLabel,
                 teamLabel,
                 scoreTitle,
-                flagCountLabel,
-                flagCaptureLabel
+                flagCountLabel
+                //flagCaptureLabel
         );
+        sidePanel.setAlignment(Pos.TOP_CENTER);
 
         // Create top panel in a border pane displaying the remaining time
         BorderPane topPane = new BorderPane();
@@ -484,8 +490,8 @@ public class Maze {
             return false;
         }
 
-        // Check if cell is a barrier
-        if (grid[newX][newY] == 1) {
+        // Check if cell is a barrier or home
+        if (grid[newX][newY] == 1 || grid[newX][newY] == 3 || grid[newX][newY] == 4) {
             return false;
         }
 

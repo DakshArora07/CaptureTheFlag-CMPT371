@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -15,6 +16,7 @@ import sfu.cmpt371.group7.game.server.Server;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 
 public class Menu extends Application {
     @Override
@@ -42,7 +44,7 @@ public class Menu extends Application {
     }
 
     public static void setupScene(Stage primaryStage, VBox root) {
-        Scene scene = new Scene(root, 480, 500);
+        Scene scene = new Scene(root, 500, 470);
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.centerOnScreen();
@@ -58,6 +60,7 @@ public class Menu extends Application {
             });
         });
         primaryStage.setTitle("Capture the Flag");
+        primaryStage.getIcons().add(new Image(Objects.requireNonNull(Menu.class.getResourceAsStream("/sfu/cmpt371/group7/game/gameIcon.png"))));
         primaryStage.show();
     }
 
@@ -82,6 +85,7 @@ public class Menu extends Application {
     private void showNewGameDialog(Stage stage) {
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Create New Game");
+        dialogStage.getIcons().add(new Image(Objects.requireNonNull(Menu.class.getResourceAsStream("/sfu/cmpt371/group7/game/gameIcon.png"))));
 
         VBox dialogVBox = new VBox(15);
         dialogVBox.setPadding(new Insets(30));
@@ -94,6 +98,7 @@ public class Menu extends Application {
         } catch (UnknownHostException ignored) {}
 
         Label ipLabel = new Label("Your IP: " + address);
+        ipLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
         Button startButton = new Button("Start Game");
         styleButton(startButton, "#27ae60", "#1e8449");
 
@@ -125,13 +130,14 @@ public class Menu extends Application {
     private void showJoinGameDialog(Stage stage) {
         Stage joinStage = new Stage();
         joinStage.setTitle("Join Game");
-
+        joinStage.getIcons().add(new Image(Objects.requireNonNull(Menu.class.getResourceAsStream("/sfu/cmpt371/group7/game/gameIcon.png"))));
         VBox joinBox = new VBox(15);
         joinBox.setPadding(new Insets(30));
         joinBox.setStyle("-fx-background-color: #ecf0f1; -fx-background-radius: 10;");
         joinBox.setAlignment(Pos.CENTER);
 
         Label prompt = new Label("Enter host IP address:");
+        prompt.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
         TextField ipField = new TextField();
         ipField.setMaxWidth(200);
         ipField.setPromptText("e.g. 192.168.1.100");
