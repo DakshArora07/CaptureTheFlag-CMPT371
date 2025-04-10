@@ -18,7 +18,7 @@ import static java.lang.System.exit;
  * this class is responsible for starting the server and handling the clients.
  */
 public class Server {
-    private static final int NUM_PLAYERS = 4;
+    private static final int NUM_PLAYERS = 1;
     private static final int PORT = 65000;
     private final List<ClientHandler> clients = new ArrayList<>();
     private int clientCount = 0;

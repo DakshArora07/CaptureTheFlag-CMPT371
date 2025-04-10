@@ -36,7 +36,7 @@ public class Console {
     /**
      * Minimum number of players required to start the game
      */
-    private static final int NUM_PLAYERS = 4;
+    private static final int NUM_PLAYERS = 1;
 
     /**
      * The Port number at which the server runs.

@@ -99,6 +99,8 @@ public class Maze {
     /** Store the timestamp when player starts attempting to capture a flag*/
     private long captureStartTime;
 
+    private boolean cPressed;
+
     /** Number of flags captured by red team */
     private int redFlagCount;
 
@@ -121,6 +123,7 @@ public class Maze {
         blueFlagCount = 0;
         redFlagCount = 0;
         captureStartTime = -1;
+        cPressed = false;
 
         loadMap();
         System.out.println("player name is " + player.getName());
@@ -402,8 +405,15 @@ public class Maze {
                 int newY = localPlayer.getY();
                 boolean hasMoved = false;
 
+                // Respawn player if they press any button while holding C
+                if (cPressed && event.getCode() != KeyCode.C) {
+                    out.println("captureDuration " + localPlayer.getName() + " flag1 " + 0.0);
+                    cPressed=false;
+                    capturePromptLabel.setVisible(false);
+                    captureStartTime = -1;
+                }
                 // Move a block up if W pressed
-                if (event.getCode() == KeyCode.W) {
+                else if (event.getCode() == KeyCode.W) {
                     if (checkValidMove(newX - 1, newY)) {
                         newX--;
                         hasMoved = true;
@@ -433,7 +443,7 @@ public class Maze {
 
                 // Start capturing when C is pressed and player is on a flag
                 else if (event.getCode() == KeyCode.C && getUncapturedFlagAtPosition(newX, newY) != null) {
-
+                    cPressed = true;
                     if (captureStartTime == -1) {
                         captureStartTime = System.currentTimeMillis();
                         capturePromptLabel.setText("Capturing ...");
@@ -456,6 +466,7 @@ public class Maze {
         });
 
         scene.setOnKeyReleased(event -> {
+            cPressed = false;
             if (event.getCode() == KeyCode.C && getUncapturedFlagAtPosition(localPlayer.getX(), localPlayer.getY()) != null) {
                 Flag flagAtPosition = getUncapturedFlagAtPosition(localPlayer.getX(), localPlayer.getY());
                 if (captureStartTime != -1) {
