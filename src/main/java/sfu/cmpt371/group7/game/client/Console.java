@@ -36,7 +36,7 @@ public class Console {
     /**
      * Minimum number of players required to start the game
      */
-    private static final int NUM_PLAYERS = 1;
+    private static final int NUM_PLAYERS = 4;
 
     /**
      * The Port number at which the server runs.
@@ -46,7 +46,7 @@ public class Console {
     /**
      * Number of characters allowed in a player's name
      */
-    private static final int NAME_LENGTH = 3;
+    private static final int NAME_LENGTH = 2;
 
     /**
      * The IP Address of the sever hosting the game.
@@ -187,7 +187,7 @@ public class Console {
         VBox nameSection = new VBox(8);
         nameSection.setAlignment(Pos.CENTER);
 
-        Label nameLabel = new Label("ENTER YOUR NAME (AT MOST 3 CHARACTERS)");
+        Label nameLabel = new Label("ENTER YOUR NAME (AT MOST "+ NAME_LENGTH +" CHARACTERS)");
         nameLabel.setTextFill(Color.WHITE);
         nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
@@ -270,27 +270,27 @@ public class Console {
 
         buttonBox.getChildren().addAll(redButton, blueButton);
 
-        // Game Instructions
-        VBox instructionsBox = new VBox(5);
-        instructionsBox.setAlignment(Pos.CENTER);
-        instructionsBox.setPadding(new Insets(15));
-        instructionsBox.setStyle("-fx-background-color: rgba(0,0,0,0.2); -fx-background-radius: 5;");
-        instructionsBox.setMaxWidth(400);
-
-        Label instructionsTitle = new Label("HOW TO PLAY");
-        instructionsTitle.setFont(Font.font("Arial", FontWeight.BOLD, 12));
-        instructionsTitle.setTextFill(Color.WHITE);
-
-        Label instructionsText = new Label(
-                """
-                        • Capture flags by standing on them
-                        • Use W, A, S, D keys to move
-                        • First team to capture 2 flags wins"""
-        );
-        instructionsText.setTextFill(Color.LIGHTGRAY);
-        instructionsText.setWrapText(true);
-
-        instructionsBox.getChildren().addAll(instructionsTitle, instructionsText);
+//        // Game Instructions
+//        VBox instructionsBox = new VBox(5);
+//        instructionsBox.setAlignment(Pos.CENTER);
+//        instructionsBox.setPadding(new Insets(15));
+//        instructionsBox.setStyle("-fx-background-color: rgba(0,0,0,0.2); -fx-background-radius: 5;");
+//        instructionsBox.setMaxWidth(400);
+//
+//        Label instructionsTitle = new Label("HOW TO PLAY");
+//        instructionsTitle.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+//        instructionsTitle.setTextFill(Color.WHITE);
+//
+//        Label instructionsText = new Label(
+//                """
+//                        • Capture flags by standing on them
+//                        • Use W, A, S, D keys to move
+//                        • First team to capture 2 flags wins"""
+//        );
+//        instructionsText.setTextFill(Color.LIGHTGRAY);
+//        instructionsText.setWrapText(true);
+//
+//        instructionsBox.getChildren().addAll(instructionsTitle, instructionsText);
 
         // Waiting indicator (initially invisible)
         HBox waitingBox = new HBox(10);
@@ -309,8 +309,8 @@ public class Console {
         waitingBox.getChildren().addAll(waitingIndicator, waitingLabel);
 
         // Add all elements to root
-        root.getChildren().addAll(counterBox, nameSection, buttonBox, instructionsBox, waitingBox);
-        root.setPadding(new Insets(130,30,0,30));
+        root.getChildren().addAll(counterBox, nameSection, buttonBox, waitingBox);
+        root.setPadding(new Insets(100,30,30,30));
 
         // Create scene
         setupScene(primaryStage, root);

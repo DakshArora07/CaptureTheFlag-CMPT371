@@ -273,9 +273,10 @@ public class Maze {
         flagCaptureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333;");
 
         capturePromptLabel = new Label();
-        if (localPlayer.getTeam().toLowerCase().equals("red")) {
+        assert localPlayer != null;
+        if (localPlayer.getTeam().equalsIgnoreCase("red")) {
             capturePromptLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #d32f2f; -fx-font-weight: bold;");
-        } else if (localPlayer.getTeam().toLowerCase().equals("blue")) {
+        } else if (localPlayer.getTeam().equalsIgnoreCase("blue")) {
             capturePromptLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #00008a; -fx-font-weight: bold;");
         }
         capturePromptLabel.setVisible(false);
@@ -290,7 +291,6 @@ public class Maze {
 
         statusLabel = new Label("Players: 0");
 
-        assert localPlayer != null;
         Label nameLabel = new Label("Name: " + localPlayer.getName());
         Label teamLabel = new Label("Team: " + localPlayer.getTeam().toUpperCase());
 
@@ -374,13 +374,26 @@ public class Maze {
             player.setY(y);
         }
 
-        // Create visual representation
-        Rectangle rect = new Rectangle(25, 25);
-        rect.setFill(team.equals("red") ? Color.RED : Color.BLUE);
-        rect.setStroke(Color.GRAY);
+        Rectangle rect = new Rectangle(22, 22);
+        Color teamColor = player.getTeam().equals("red") ? Color.rgb(211, 47, 47) : Color.rgb(25, 118, 210);
+        rect.setFill(teamColor);
+        rect.setStroke(Color.WHITE);
+        rect.setStrokeWidth(1.5);
+        rect.setArcHeight(10);
+        rect.setArcWidth(10);
 
-        Text textNode = new Text(playerName);
+        // Add glow effect for the local player
+        if (player.getName().equals(localPlayer.getName())) {
+            DropShadow glow = new DropShadow();
+            glow.setColor(teamColor);
+            glow.setRadius(10);
+            rect.setEffect(glow);
+        }
+
+        Text textNode = new Text(player.getName());
         textNode.setFill(Color.WHITE);
+        textNode.setFont(Font.font("System", FontWeight.BOLD, 10));
+        textNode.setEffect(new DropShadow(2, Color.BLACK));
 
         // Stack them together
         StackPane pane = new StackPane(rect, textNode);
@@ -590,7 +603,6 @@ public class Maze {
 
             // Create a new player representation
             Rectangle rect = new Rectangle(22, 22);
-
             Color teamColor = player.getTeam().equals("red") ? Color.rgb(211, 47, 47) : Color.rgb(25, 118, 210);
             rect.setFill(teamColor);
             rect.setStroke(Color.WHITE);
@@ -792,10 +804,12 @@ public class Maze {
                     if (capturingPlayer.getTeam().equals("red")) {
                         redFlagCount++;
                         StackPane flagCell = new StackPane(baseRect, render("redFlag"));
+                        assert capturedFlag != null;
                         gridPane.add(flagCell, capturedFlag.getY(), capturedFlag.getX());
                     } else {
                         blueFlagCount++;
                         StackPane flagCell = new StackPane(baseRect, render("blueFlag"));
+                        assert capturedFlag != null;
                         gridPane.add(flagCell, capturedFlag.getY(), capturedFlag.getX());
                     }
                     flagCountLabel.setText("Red: " + redFlagCount + " Blue: " + blueFlagCount);
@@ -956,6 +970,9 @@ public class Maze {
         Platform.runLater(() -> {
             Stage resultStage = new Stage();
             Results results = new Results(resultStage, winner);
+            resultStage.setOnCloseRequest(e -> {
+                System.exit(0);
+            });
             results.showResults();
         });
     }
