@@ -1,39 +1,137 @@
-## CMPT 371 Group Project: Capture the Flag
+# CMPT 371 Group 7: Multiplayer Capture the Flag
 
-This repository implements a simple multiplayer Capture the Flag game written in Java. Players connect to a central server, choose a team, and try to capture flags in a maze-like arena.
+A real-time multiplayer Capture the Flag game implemented in Java with JavaFX. Players join either the red or blue team and compete to capture flags in a maze-like arena.
 
-### Features
-- **Multiplayer**: Connect multiple clients to a single server.
-- **JavaFX UI**: Displays a grid-based maze, animated startup, and a 3-minute countdown.
-- **Maven-based**: Easy to build and run with Maven.
+## Features
 
-### Prerequisites
+- **Real-time Multiplayer**: Connect multiple clients to a central server over TCP/IP
+- **Team-based Gameplay**: Join the red or blue team and compete to capture flags
+- **Dynamic Grid Environment**: Navigate through a maze-like arena with walls and flags
+- **Flag Capture Mechanics**: Hold 'C' for 3-4 seconds to capture a flag
+- **Smooth Player Movement**: Use WASD keys for responsive movement
+- **Visual Feedback**: Color-coded teams with player names and status indicators
+- **Game State Management**: Server tracks player positions, flag statuses, and win conditions
+- **Lobby System**: Join existing games or host your own
+- **Resilient Networking**: Handles player connections and disconnections gracefully
+
+## Prerequisites
+
 - Java 17 or higher
-- [Maven](https://maven.apache.org)
+- [Maven](https://maven.apache.org) for building the project
+- JavaFX (included in the Maven dependencies)
 
-### How to Run
-1. **Clone and navigate** to the project folder:
+## How to Run
+
+### Option 1: Hosting a New Game
+
+1. **Clone the repository**:
    ```bash
-   git clone git@github.com:DakshArora07/CMPT371-Group7.git
+   git clone https://github.com/DakshArora07/CMPT371-Group7.git
+   cd CMPT371-Group7
    ```
-2. **Set environment variables** (for example in `var.env`):  
-   ```
-   ADDRESS = "localhost" OR "<IP_ADDRESS>"
-   PORT_NUMBER = 12345
-   ```
-3. **Build** with Maven:
+
+2. **Build the project with Maven**:
    ```bash
    mvn package
    ```
-4. **Start the server** by running the main class in `Server.java`:
-   ```bash
-   mvn clean javafx:run
-   ```
-   It will listen for incoming client connections on the specified port.
-5. **Launch the client** by running the `Console` application:
-   ```bash
-   mvn clean javafx:run
-   ```
-   You will be prompted to create or join a team.
 
-Enjoy your Capture the Flag game! Feel free to customize the UI or logic as needed.
+3. **Launch the application**:
+   ```bash
+   mvn clean javafx:run
+   ```
+
+4. **In the main menu, click "NEW GAME"**
+   - The application will display your IP address
+   - Share this IP with players who want to join your game
+   - Click "Start Game" to host the server and enter the waiting room
+   - The game will automatically start once 4 players have joined
+
+### Option 2: Joining an Existing Game
+
+1. **Follow steps 1-3 above** to launch the application
+2. **Click "JOIN GAME"** on the main menu
+3. **Enter the host's IP address** in the provided field
+4. **Click "Join"** to connect to the host's game
+
+## How to Play
+
+1. **Team Selection**: Choose to join either the red or blue team
+2. **Enter Your Name**: Create a player name (2 characters maximum)
+3. **Game Controls**:
+   - **W**: Move up
+   - **A**: Move left
+   - **S**: Move down
+   - **D**: Move right
+   - **C**: Hold to capture a flag (must hold for 3-4 seconds while standing on a flag)
+
+4. **Objective**:
+   - Capture more flags than the opposing team
+   - The first team to capture 4 flags wins
+   - Avoid enemy players who can interrupt your capture attempts
+
+## Game Mechanics
+
+- **Flags**: Represented by flag icons on the map
+- **Capturing**: Stand on a flag and hold 'C' for 3-4 seconds to capture it
+- **Team Bases**: Each team has spawn points where players respawn after unsuccessful capture attempts
+- **Collision**: Players cannot move through walls or other players (except on flag positions)
+- **Flag Status**: Captured flags change color to indicate which team captured them
+
+## Project Structure
+
+- `src/main/java/sfu/cmpt371/group7/game/`
+   - `client/`: Client-side code for UI and player interaction
+      - `Console.java`: Initial team/name selection screen
+      - `Maze.java`: Main game area with grid, movement, and flag capture logic
+      - `Menu.java`: Main menu for hosting or joining games
+      - `Results.java`: End-game results display
+   - `model/`: Game entity models
+      - `Flag.java`: Represents flags that can be captured
+      - `Player.java`: Represents players with team, position, and status
+   - `server/`: Server-side code for game management
+      - `Server.java`: Manages connections, game state, and win conditions
+   - `Game.java`: Main entry point for the application
+
+## Network Protocol
+
+The game uses a simple text-based protocol over TCP for client-server communication:
+
+- `teamSelection <team> <name>`: Player selects a team and provides a name
+- `movePlayer <name> <x> <y>`: Updates a player's position
+- `captureDuration <name> <flagName> <duration>`: Attempts to capture a flag
+- `flagCaptured <name> <flagName>`: Notifies that a flag was captured
+- `gameOver <winner>`: Indicates the game has ended with a winner
+
+## Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/DakshArora07/CMPT371-Group7.git
+
+# Navigate to the project directory
+cd CMPT371-Group7
+
+# Build with Maven
+mvn clean package
+
+# Run the application
+mvn javafx:run
+```
+
+## Troubleshooting
+
+- **Connection Issues**: Ensure firewall settings allow connections on port 65000
+- **Display Problems**: Verify that your system meets JavaFX requirements
+- **Build Errors**: Check that you have Java 17+ and Maven properly installed
+
+## Contributors
+
+- Group 7 Members (CMPT 371)
+
+## License
+
+[MIT License](LICENSE)
+
+---
+
+Made with ❤️ for CMPT 371 at Simon Fraser University
