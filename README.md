@@ -1,4 +1,4 @@
-# CMPT 371 Group 7: Multiplayer Capture the Flag
+# CMPT 371 Group 7: Capture the Flag
 
 A real-time multiplayer Capture the Flag game implemented in Java with JavaFX. Players join either the red or blue team and compete to capture flags in a maze-like arena.
 
@@ -43,15 +43,18 @@ This will do the same as the previous command, and will also put the jar file an
 
 Once the project is built, you can run the maze game using the following Maven command after building:
 
+``` bash
 mvn clean javafx:run
+```
 
 This will start the game, and you will be able to interact with it.
 
 
 You can also run the game from the executable jar file by opening the directory of the jar file in terminal and using the following command:
 
+``` bash
 java -jar Game-1.0-SNAPSHOT.jar
-
+```
 
 
 .
@@ -59,17 +62,17 @@ java -jar Game-1.0-SNAPSHOT.jar
 
 ### Option 1: Hosting a New Game
 
-- In the main menu, click "NEW GAME"**
-   - The application will display your IP address
-   - Share this IP with players who want to join your game
-   - Click "Start Game" to host the server and enter the waiting room
-   - The game will automatically start once 4 players have joined
+- In the main menu, click **"NEW GAME"**
+- The application will display your IP address
+- Share this IP with players who want to join your game
+- Click "Start Game" to host the server and enter the waiting room
+- The game will automatically start once 4 players have joined
 
 ### Option 2: Joining an Existing Game
 
-1. **Click "JOIN GAME"** on the main menu
-2. **Enter the host's IP address** in the provided field
-3. **Click "Join"** to connect to the host's game
+- In the main menu, click **"JOIN GAME"**
+- Enter the host's IP address in the provided field
+- Click "Join" to connect to the host's game
 
 ## How to Play
 
@@ -80,7 +83,7 @@ java -jar Game-1.0-SNAPSHOT.jar
    - **A**: Move left
    - **S**: Move down
    - **D**: Move right
-   - **C**: Hold to capture a flag (must hold for 3-4 seconds while standing on a flag)
+   - **C**: Hold to capture a flag (must hold between 3 to 4 seconds while standing on a flag)
 
 4. **Objective**:
    - Capture more flags than the opposing team
@@ -90,7 +93,7 @@ java -jar Game-1.0-SNAPSHOT.jar
 ## Game Mechanics
 
 - **Flags**: Represented by flag icons on the map
-- **Capturing**: Stand on a flag and hold 'C' for 3-4 seconds to capture it
+- **Capturing**: Stand on a flag and hold 'C' between 3 to 4 seconds to capture it
 - **Team Bases**: Each team has spawn points where players respawn after unsuccessful capture attempts
 - **Collision**: Players cannot move through walls or other players (except on flag positions)
 - **Flag Status**: Captured flags change color to indicate which team captured them
