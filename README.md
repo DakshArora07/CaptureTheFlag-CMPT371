@@ -67,9 +67,9 @@ java -jar Game-1.0-SNAPSHOT.jar
 
 ### Option 2: Joining an Existing Game
 
-1**Click "JOIN GAME"** on the main menu
-2**Enter the host's IP address** in the provided field
-3**Click "Join"** to connect to the host's game
+1. **Click "JOIN GAME"** on the main menu
+2. **Enter the host's IP address** in the provided field
+3. **Click "Join"** to connect to the host's game
 
 ## How to Play
 
