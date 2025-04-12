@@ -7,7 +7,7 @@ A real-time multiplayer Capture the Flag game implemented in Java with JavaFX. P
 - **Real-time Multiplayer**: Connect multiple clients to a central server over TCP/IP
 - **Team-based Gameplay**: Join the red or blue team and compete to capture flags
 - **Dynamic Grid Environment**: Navigate through a maze-like arena with walls and flags
-- **Flag Capture Mechanics**: Hold 'C' for 3-4 seconds to capture a flag
+- **Flag Capture Mechanics**: Hold 'C' between 3 to 4 seconds to capture a flag
 - **Smooth Player Movement**: Use WASD keys for responsive movement
 - **Visual Feedback**: Color-coded teams with player names and status indicators
 - **Game State Management**: Server tracks player positions, flag statuses, and win conditions
@@ -57,7 +57,6 @@ java -jar Game-1.0-SNAPSHOT.jar
 ```
 
 
-.
 ## How to Run
 
 ### Option 1: Hosting a New Game
