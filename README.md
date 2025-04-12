@@ -20,27 +20,46 @@ A real-time multiplayer Capture the Flag game implemented in Java with JavaFX. P
 - [Maven](https://maven.apache.org) for building the project
 - JavaFX (included in the Maven dependencies)
 
+
+## Building the Project
+
+To build the project, use the following Maven command:
+``` bash
+mvn clean package
+```
+
+This will test and compile the project and ensure that all required dependencies are downloaded. Then, this will generate a jar file in the target/ directory, which can be used to distribute or run the game.
+
+
+You can also use the following Maven command:
+
+``` bash
+mvn clean install
+```
+
+This will do the same as the previous command, and will also put the jar file and other files in your local repository.
+
+## Running the Game
+
+Once the project is built, you can run the maze game using the following Maven command after building:
+
+mvn clean javafx:run
+
+This will start the game, and you will be able to interact with it.
+
+
+You can also run the game from the executable jar file by opening the directory of the jar file in terminal and using the following command:
+
+java -jar Game-1.0-SNAPSHOT.jar
+
+
+
+.
 ## How to Run
 
 ### Option 1: Hosting a New Game
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/DakshArora07/CMPT371-Group7.git
-   cd CMPT371-Group7
-   ```
-
-2. **Build the project with Maven**:
-   ```bash
-   mvn package
-   ```
-
-3. **Launch the application**:
-   ```bash
-   mvn clean javafx:run
-   ```
-
-4. **In the main menu, click "NEW GAME"**
+- In the main menu, click "NEW GAME"**
    - The application will display your IP address
    - Share this IP with players who want to join your game
    - Click "Start Game" to host the server and enter the waiting room
@@ -48,10 +67,9 @@ A real-time multiplayer Capture the Flag game implemented in Java with JavaFX. P
 
 ### Option 2: Joining an Existing Game
 
-1. **Follow steps 1-3 above** to launch the application
-2. **Click "JOIN GAME"** on the main menu
-3. **Enter the host's IP address** in the provided field
-4. **Click "Join"** to connect to the host's game
+1**Click "JOIN GAME"** on the main menu
+2**Enter the host's IP address** in the provided field
+3**Click "Join"** to connect to the host's game
 
 ## How to Play
 
@@ -94,7 +112,7 @@ A real-time multiplayer Capture the Flag game implemented in Java with JavaFX. P
 
 ## Network Protocol
 
-The game uses a simple text-based protocol over TCP for client-server communication:
+The game uses a simple text-based protocol over TCP for client-server communication for eg:
 
 - `teamSelection <team> <name>`: Player selects a team and provides a name
 - `movePlayer <name> <x> <y>`: Updates a player's position
@@ -102,21 +120,6 @@ The game uses a simple text-based protocol over TCP for client-server communicat
 - `flagCaptured <name> <flagName>`: Notifies that a flag was captured
 - `gameOver <winner>`: Indicates the game has ended with a winner
 
-## Building from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/DakshArora07/CMPT371-Group7.git
-
-# Navigate to the project directory
-cd CMPT371-Group7
-
-# Build with Maven
-mvn clean package
-
-# Run the application
-mvn javafx:run
-```
 
 ## Troubleshooting
 
@@ -124,14 +127,18 @@ mvn javafx:run
 - **Display Problems**: Verify that your system meets JavaFX requirements
 - **Build Errors**: Check that you have Java 17+ and Maven properly installed
 
-## Contributors
-
-- Group 7 Members (CMPT 371)
+## Contributing
+Since this project is part of a university course group project, contributions were made by team members only.
 
 ## License
+This project is not open-source and is part of a private course project at Simon Fraser University. Unauthorized redistribution or modification is prohibited.
 
-[MIT License](LICENSE)
+## Acknowledgements
+This game was developed by Ayush Arora, Daksh Arora, Hetmay Ketan Vora and Kabir Singh Sidhu,
+students at Simon Fraser University as part of the CMPT371: Data communication and networking. Special thanks to our course instructors and teaching assistants for their guidance throughout the project.
 
----
 
-Made with ❤️ for CMPT 371 at Simon Fraser University
+--- 
+
+Happy gaming folks ! 🎮
+```
