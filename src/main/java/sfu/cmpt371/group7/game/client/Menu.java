@@ -5,13 +5,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import sfu.cmpt371.group7.game.server.Server;
 
@@ -19,7 +15,18 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
 
+/**
+ * The {@code Menu} class provides the GUI for the main menu of the
+ * game, letting the user to either host a new game or join already started game.
+ *
+ * <p> This JavaFX application serves as the game's entry point.</p>
+*/
 public class Menu extends Application {
+    /**
+     * Starts the JavaFX application and displays main menu window.
+     *
+     * @param primaryStage The main stage for this application.
+     */
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CAPTURE THE FLAG");
@@ -47,6 +54,12 @@ public class Menu extends Application {
         setupScene(primaryStage, root);
     }
 
+    /**
+     * Configures and displays the main application scene.
+     *
+     * @param primaryStage The main application window
+     * @param root The root layout of the scene.
+     */
     public static void setupScene(Stage primaryStage, VBox root) {
         Scene scene = new Scene(root, 500, 490);
         primaryStage.setScene(scene);
@@ -68,6 +81,12 @@ public class Menu extends Application {
         primaryStage.show();
     }
 
+
+    /**
+     * Creates and returns the Vbox with background image and styles.
+     *
+     * @return the VBox layout.
+     */
     public static VBox setupRoot() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(30));
@@ -84,15 +103,12 @@ public class Menu extends Application {
         return root;
     }
 
-    public static Label setupTitleLabel() {
-        Label titleLabel = new Label("CAPTURE THE FLAG");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
-        titleLabel.setTextFill(Color.WHITE);
-        titleLabel.setEffect(new DropShadow(10, Color.BLACK));
-
-        return titleLabel;
-    }
-
+    /**
+     * Displays a dialog for creating a new game. It opens the launches
+     * the server and opens game console.
+     *
+     * @param stage The parent stage to close when a new game starts.
+     */
     private void showNewGameDialog(Stage stage) {
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Create New Game");
@@ -138,6 +154,12 @@ public class Menu extends Application {
         dialogStage.show();
     }
 
+    /**
+     *
+     * Displays a dialog for joining a preloaded; existing game using an IP addr.
+     *
+     * @param stage The parent stage to close when one joins a game.
+     */
     private void showJoinGameDialog(Stage stage) {
         Stage joinStage = new Stage();
         joinStage.setTitle("Join Game");
@@ -181,6 +203,13 @@ public class Menu extends Application {
         joinStage.show();
     }
 
+    /**
+     * Styles button with specified background and hover colors.
+     *
+     * @param button The button to style
+     * @param color The default color
+     * @param hoverColor The background color when hovered.
+     */
     private void styleButton(Button button, String color, String hoverColor) {
         button.setPrefWidth(200);
         button.setPrefHeight(50);
@@ -193,12 +222,22 @@ public class Menu extends Application {
                 "-fx-text-fill: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 5);"));
     }
 
+    /**
+     * Display an error alert with particular message
+     *
+     * @param msg The message to display while alerting
+     */
     private void showAlert(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setContentText(msg);
         alert.showAndWait();
     }
 
+    /**
+     * Main to launch application
+     *
+     * @param args Command-line argument.
+     */
     public static void main(String[] args) {
         launch(args);
     }

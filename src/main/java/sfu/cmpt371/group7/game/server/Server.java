@@ -15,7 +15,11 @@ import java.util.List;
 import static java.lang.System.exit;
 
 /**
- * this class is responsible for starting the server and handling the clients.
+ * The {@code Server} class handles multiplayer game server logic.
+ * It manages client connections, game initializations, player communication and the win conditions.
+ * It supports up to four players and deals with game events, for example,
+ * player movement, selecting teams, handling the flags and respawning the players.
+ * Communication is done over sockets using the TCP protocol.
  */
 public class Server {
     private static final int NUM_PLAYERS = 4;
@@ -47,7 +51,8 @@ public class Server {
     }
 
     /**
-     * starts the server and listens for client connections
+     * Starts the server and listens for client connections on a specified port.
+     * For each connection, a new {@code ClientHandler} thread is initiated.
      */
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -67,7 +72,8 @@ public class Server {
     }
 
     /**
-     * broadcasts a message to all connected clients
+     * Broadcasts a message to all connected clients
+     * @param message The message to be broadcast to all the clients.
      */
     private void broadcast(String message) {
         System.out.println("Broadcasting: " + message);
@@ -82,7 +88,7 @@ public class Server {
     }
 
     /**
-     * checks if the game should start based on player count
+     * Checks if the game should start based on player count
      * if the minimum number of players is reached then the
      * broadcast message is sent to all the players
      */
@@ -100,7 +106,10 @@ public class Server {
     }
 
     /**
-     * find a player by their name
+     * Finds the player object by its name and returns it.
+     *
+     * @param name The name of the player to find.
+     * @return The {@code Player} with the matching name, or {@code null} if that name is not found.
      */
     private Player findPlayerByName(String name) {
         for (Player player : PLAYERS) {
@@ -112,7 +121,10 @@ public class Server {
     }
 
     /**
-     * find a flag by its name
+     * Finds a flag by its name.
+     *
+     * @param name The name of the flag to find.
+     * @return The {@code Flag} with same name, or {@code null} if it is not found.
      */
     private Flag findFlagByName(String name) {
         for (Flag f : flags) {
@@ -124,7 +136,8 @@ public class Server {
     }
 
     /**
-     * check if a team has won
+     * Checks if a team has won by capturing enough number of flags.
+     * Sends terminating message if above condition is fulfilled.
      */
     private void checkWinCondition() {
         if (redFlagCount >= 4) {
@@ -134,6 +147,13 @@ public class Server {
         }
     }
 
+    /**
+     * Decides if a specific grid position is unoccupied by any player.
+     *
+     * @param x The x-co-ord of particular position
+     * @param y the y-co-ord of particular position
+     * @return {@code true} is particular position is empty, {@code false} otherwise.
+    */
     private boolean isNoPlayerAtPosition(int x, int y) {
         for (Player player : PLAYERS) {
             if (player.getX() == x && player.getY() == y) {
@@ -145,8 +165,9 @@ public class Server {
 
 
     /**
-     * this class handles communication with a single client
-     * implemented as a Runnable to allow for multi-threading
+     * Handles communication with a single client in a separate thread;
+     * implemented as a Runnable to allow for multi-threading.
+     * Each client has corresponding {@code ClientHandler} instance.
      */
     private class ClientHandler implements Runnable {
         private final Socket socket;
@@ -154,6 +175,10 @@ public class Server {
         private BufferedReader in;
         private String playerName;
 
+        /**
+         * Constructs {@code ClientHandler} for particular client socket.
+         * @param socket The socket that is connected to client.
+         */
         public ClientHandler(Socket socket) {
             this.socket = socket;
             try {
@@ -165,7 +190,9 @@ public class Server {
         }
 
         /**
-         * sends a message to this client
+         * Sends a message to this specific client.
+         *
+         * @param message The message that needs to be sent.
          */
         public void sendMessage(String message) {
             if (out != null) {
@@ -174,8 +201,8 @@ public class Server {
         }
 
         /**
-         * handles incoming messages from the client
-         * new and improved switch case statement to handle different message types from the server
+         * Listens for messages from the client and sends them according to
+         * the type of message. e.g., team selection.
          */
         @Override
         public void run() {
@@ -225,7 +252,10 @@ public class Server {
         }
 
         /**
-         * Respawn a player to their team's spawn point
+         * Respawn a player to their team's designated spawn point.
+         * Notifies all clients of the updated position.
+         *
+         * @param player The player to respawn.
          */
         private void respawnPlayer(Player player) {
             int spawnX = 10, spawnY = 10;
@@ -263,8 +293,9 @@ public class Server {
         }
 
         /**
-         * handle team selection message
-         * place the red team players in left side and blue team players on the right side
+         * Handles team selection message sent by the client.
+         * Adds the player to either the red or blue team and broadcasts their position.
+         * Makes sure game starts after player joins.
          */
         private void handleTeamSelection(String[] parts) {
             if (parts.length >= 3) {
@@ -315,8 +346,11 @@ public class Server {
             }
         }
 
-        /*
-         * send client has joined team color to all players
+        /**
+         * Sends a message to all connected clients except the sender
+         * to notify them that a player has joined a team.
+         *
+         * @param message The message that came which has team and player name.
          */
         private void sendClientToAllPlayers(String message) {
             for (ClientHandler client : clients) {
@@ -331,9 +365,12 @@ public class Server {
         }
 
         /**
-         * handle move player message
+         * Handles move player message
          * first we update the location of the player, and then we check if the player has captured a flag
-         * if then we broadcast the lock flag message to all the players
+         * if then we broadcast the lock flag message to all the players.
+         *
+         * @param parts The message containing player name and new coordinates.
+         * @throws InterruptedException If thread sleep or it gets block.
          */
         private void handleMovePlayer(String[] parts) throws InterruptedException {
 
@@ -352,7 +389,11 @@ public class Server {
         }
 
         /**
-         * update player position in the server's state
+         * Updates player position with new coordinates in the server's state
+         *
+         * @param name The name of the player.
+         * @param x The new x-co-ord.
+         * @param y The new y-co-ord.
          */
         private void updatePlayerPosition(String name, int x, int y) {
             for (Player player : PLAYERS) {
@@ -365,15 +406,16 @@ public class Server {
         }
 
         /**
-         * handle request for current player count
-         * only used to get the size of the players and to set the number of players label in the UI
+         * Handles request from the client for current player count.
+         * Only used to get the size of the players and to set the number of players label in the UI
          */
         private void handleCurrentPlayers() {
             sendMessage("sizeOfPlayersIs " + PLAYERS.size());
         }
 
         /**
-         * handle exit game message
+         * Handles a request from the client for the current number of plaeyers.
+         * Sends back the number of players currently connected.
          */
         private void handleExitGame(String[] parts) {
             if (parts.length >= 2) {
@@ -396,7 +438,8 @@ public class Server {
         }
 
         /**
-         * handle flag coordinates message
+         * Handles flag coordinates message.
+         * Stores the coordinates of all flags sent from the client.
          */
         private void handleFlagCoordinates(String[] parts) {
             //flagCoordinates <flag1.x> <flag1.y> <flag2.x> <flag2.y> <flag3.x> <flag3.y>
@@ -414,8 +457,8 @@ public class Server {
         }
 
         /**
-         * handle resend players request
-         * used to get the resend the players in case of an error to get the location of the players
+         * Handles resend all current players request and flag data to a client.
+         * Used to get the resend the players in case of an error to get the location of the players
          */
         private void handleResendPlayers() {
             System.out.println("Resending all players to client");
@@ -434,8 +477,8 @@ public class Server {
         }
 
         /**
-         * handle game over message
-         * also opens the results window to show the team that won
+         * Handles game over message.
+         * Determines winner based on flag counts and broadcasts the result.
          */
         private void handleGameOver(String[] parts) {
             String winner = parts.length > 1 ? parts[1] : "";
@@ -454,8 +497,8 @@ public class Server {
         }
 
         /**
-         * handle client disconnection
-         * remove the client from the server and from the game
+         * Handles client disconnection
+         * Cleans the client from the server and from the game
          */
         private void handleDisconnect() {
             try {
@@ -482,7 +525,7 @@ public class Server {
          * Handle capture duration message from clients
          * Checks if duration is within valid range (4.5-5.2 seconds)
          * If valid, flag is captured and any other players on the flag are respawned
-         * If invalid, the attempting player is respawned
+         * If invalid, the attempting player is respawned.
          */
         private void handleCaptureDuration(String[] parts) {
             // captureDuration <player name> <flag name> <time (sec)>
@@ -531,6 +574,10 @@ public class Server {
         }
     }
 
+    /**
+     * Ends the server if all clients are disconnected.
+     * This is a graceful shutdown trigger when client count drops to zero.
+    */
     private void endServer() {
         System.out.println("ending server");
         if (clientCount == 0) {
