@@ -143,4 +143,3 @@ students at Simon Fraser University as part of the CMPT371: Data communication a
 --- 
 
 Happy gaming folks ! 🎮
-```
